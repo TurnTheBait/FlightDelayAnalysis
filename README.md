@@ -15,6 +15,7 @@ The final objective is to study the correlation between weather conditions and f
 ## 🤝 Collaborazione e Supervisione
 
 This thesis project is carried out in collaboration with **flAI**.
+
 * **flAI Website:** [https://www.flai-analytics.com/blog/website](https://www.flai-analytics.com/blog/website)
 
 ### Supervisors
