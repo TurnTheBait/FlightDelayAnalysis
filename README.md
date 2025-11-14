@@ -1,24 +1,23 @@
-# Analisi e Predizione dei Ritardi dei Voli tramite Dati Meteo
+# Flight Delay Analysis and Prediction Using Weather Data
 
-Questo repository contiene il progetto software per la tesi di Laurea Magistrale in Ingegneria Informatica.
+This repository contains the software project developed for the Master’s Thesis in Computer Engineering.
 
-L'obiettivo del progetto è sviluppare un sistema in grado di collezionare, analizzare e incrociare i dati sullo stato dei voli con i dati meteorologici. Lo scopo finale è analizzare la correlazione tra le condizioni meteo e i ritardi dei voli, al fine di creare un modello predittivo.
+The goal of the project is to build a system capable of collecting, analyzing, and cross-referencing flight status data with weather data.
+The final objective is to study the correlation between weather conditions and flight delays, ultimately creating a predictive model.
 
 ---
 
-## 👥 Team di Sviluppo
+## 👥 Development Team
 
 * **Cesari Matteo**
 * **Girolamo Davide**
 
 ## 🤝 Collaborazione e Supervisione
 
-Questo progetto di tesi è svolto in collaborazione con **flAI**.
+This thesis project is carried out in collaboration with **flAI**.
+* **flAI Website:** [https://www.flai-analytics.com/blog/website](https://www.flai-analytics.com/blog/website)
 
-* **Sito Web flAI:** [https://www.flai-analytics.com/blog/website](https://www.flai-analytics.com/blog/website)
-
-### Supervisori Accademici
+### Supervisors
 
 * **Prof. Cattaneo Mattia**
 * **Prof. Birolini Sebastian**
-
