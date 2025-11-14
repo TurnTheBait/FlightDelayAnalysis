@@ -11,6 +11,12 @@ from tqdm import tqdm
 # Setup logging
 # ============================================================
 
+CURRENT_FILE = os.path.abspath(__file__)
+DOWNLOAD_DIR = os.path.dirname(CURRENT_FILE)
+PROJECT_ROOT = os.path.abspath(os.path.join(DOWNLOAD_DIR, "..", ".."))
+RAW_DATA_PATH = os.path.join(PROJECT_ROOT, "data", "raw")
+
+
 logger = logging.getLogger("EurocontrolDownloader")
 logger.setLevel(logging.INFO)
 
@@ -148,5 +154,5 @@ if __name__ == "__main__":
         data_type="flight_list",
         start_date="202401",
         end_date="202412",
-        save_folder="backend/data/raw/flights",
+        save_folder = os.path.join(RAW_DATA_PATH, "flights"),
     )
