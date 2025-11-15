@@ -1,5 +1,5 @@
 # Ambiente virtuale
-backend/venv/
+.venv/
 
 # Cache Python
 __pycache__/
