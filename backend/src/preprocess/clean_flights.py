@@ -70,3 +70,6 @@ def filter_and_merge_flights():
 
     df_all.to_csv(OUTPUT_FILE, index=False)
     print(f"Saved merged file → {OUTPUT_FILE}")
+
+if __name__ == "__main__":
+    filter_and_merge_flights()
