@@ -7,15 +7,10 @@ from dateutil.relativedelta import relativedelta
 import requests
 from tqdm import tqdm
 
-# ============================================================
-# Setup logging
-# ============================================================
-
 CURRENT_FILE = os.path.abspath(__file__)
 DOWNLOAD_DIR = os.path.dirname(CURRENT_FILE)
 PROJECT_ROOT = os.path.abspath(os.path.join(DOWNLOAD_DIR, "..", ".."))
 RAW_DATA_PATH = os.path.join(PROJECT_ROOT, "data", "raw")
-
 
 logger = logging.getLogger("EurocontrolDownloader")
 logger.setLevel(logging.INFO)
@@ -25,26 +20,9 @@ formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s")
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-
-# ============================================================
-# URL Generator
-# ============================================================
-
 BASE_URL = "https://www.eurocontrol.int/performance/data/download/OPDI/v002"
 
-
 def generate_urls(data_type: str, start_date: str, end_date: str) -> list:
-    """
-    Generate monthly Eurocontrol dataset URLs.
-
-    Args:
-        data_type (str): "flight_list", "flight_events", "measurements"
-        start_date (str): "YYYYMM"
-        end_date (str): "YYYYMM"
-
-    Returns:
-        list[str]
-    """
 
     start_dt = datetime.strptime(start_date, "%Y%m")
     end_dt = datetime.strptime(end_date, "%Y%m")
@@ -61,21 +39,7 @@ def generate_urls(data_type: str, start_date: str, end_date: str) -> list:
 
     return urls
 
-
-# ============================================================
-# File Downloader
-# ============================================================
-
 def download_file(url: str, save_path: str, retries: int = 3, timeout: int = 10):
-    """
-    Download a single file with retry logic and progress bar.
-
-    Args:
-        url (str)
-        save_path (str)
-        retries (int)
-        timeout (int)
-    """
 
     for attempt in range(1, retries + 1):
         try:
@@ -108,26 +72,12 @@ def download_file(url: str, save_path: str, retries: int = 3, timeout: int = 10)
     logger.error(f"❌ Failed to download after {retries} attempts: {url}")
     return False
 
-
-# ============================================================
-# Batch Downloader
-# ============================================================
-
 def download_range(
     data_type: str,
     start_date: str,
     end_date: str,
     save_folder: str = "backend/data/raw",
 ):
-    """
-    Download all monthly files for a given date range.
-
-    Args:
-        data_type (str)
-        start_date (str)
-        end_date (str)
-        save_folder (str)
-    """
 
     urls = generate_urls(data_type, start_date, end_date)
 
@@ -143,13 +93,8 @@ def download_range(
 
         download_file(url, path)
 
-
-# ============================================================
-# Script entrypoint
-# ============================================================
-
 if __name__ == "__main__":
-    # Download flight lists 
+
     download_range(
         data_type="flight_list",
         start_date="202401",
