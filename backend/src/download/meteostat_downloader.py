@@ -49,7 +49,7 @@ def main():
 
     airports = load_european_large_airports()
 
-    start = datetime(2022, 1, 1)
+    start = datetime(2023, 1, 1)
     end = datetime(2024, 12, 31, 23, 59)
 
     for _, row in airports.iterrows():

@@ -97,7 +97,7 @@ if __name__ == "__main__":
 
     download_range(
         data_type="flight_list",
-        start_date="202401",
+        start_date="202301",
         end_date="202412",
         save_folder = os.path.join(RAW_DATA_PATH, "flights"),
     )
