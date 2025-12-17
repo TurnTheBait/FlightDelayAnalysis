@@ -7,3 +7,5 @@ tqdm
 pandas
 meteostat
 numpy
+timezonefinder
+pytz

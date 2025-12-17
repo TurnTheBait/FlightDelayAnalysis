@@ -9,7 +9,7 @@ WEATHER_DIR = Path("backend/data/raw/weather")
 OUTPUT_DIR = Path("backend/data/processed/flights_filtered")
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-OUTPUT_FILE = OUTPUT_DIR / "flight_list_filtered_2024.csv"
+OUTPUT_FILE = OUTPUT_DIR / "flight_list_filtered_2023_2024.csv"
 
 COLUMNS_TO_DROP = ["ades_p", "adep_p", "version"]
 
@@ -44,10 +44,12 @@ def filter_and_merge_flights():
     print(f"ICAO utilizzabili dopo filtro meteo: {len(valid_icao)}")
 
     all_flights = []
+    total_raw_flights = 0
 
-    for file in RAW_FLIGHTS.glob("flight_list_2024*.parquet"):
+    for file in RAW_FLIGHTS.glob("flight_list*.parquet"):
         print(f"Loading {file}...")
         df = pd.read_parquet(file)
+        total_raw_flights += len(df)
 
         required = {"adep", "ades"}
         missing = required - set(df.columns)
@@ -63,8 +65,9 @@ def filter_and_merge_flights():
         all_flights.append(df)
 
     if not all_flights:
-        raise RuntimeError("No flights loaded for 2024.")
-
+        raise RuntimeError("No flights loaded.")
+    
+    print(f"Total flights before filtering: {total_raw_flights}")
     df_all = pd.concat(all_flights, ignore_index=True)
     print(f"Total flights after filtering: {len(df_all)}")
 
