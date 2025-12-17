@@ -10,7 +10,7 @@ DATA_DIR = os.path.join(BASE_DIR, "data")
 PROCESSED_DIR = os.path.join(DATA_DIR, "processed")
 RAW_DIR = os.path.join(DATA_DIR, "raw")
 
-SCHEDULE_FILE = os.path.join(PROCESSED_DIR, "schedule", "Schedule_23-24.csv")
+SCHEDULE_FILE = os.path.join(PROCESSED_DIR, "schedule", "clean_schedule_23-24.csv")
 FLIGHT_LIST_FILE = os.path.join(PROCESSED_DIR, "flights_filtered", "flight_list_filtered_2023_2024.csv")
 EVENTS_DIR = os.path.join(RAW_DIR, "flight_events")
 AIRPORTS_FILE = os.path.join(RAW_DIR, "airports", "airports.csv")
