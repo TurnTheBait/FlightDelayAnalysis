@@ -1,16 +1,17 @@
-# Ambiente virtuale
+# Virtual environment
 .venv/
 
 # Cache Python
 __pycache__/
 *.pyc
 
-# Dati pesanti
+# Data
 backend/src/data/
 *.parquet
 *.csv
+backend/data/raw/delays/BergamoUniReport_*.txt
 
-# File temporanei
+# Temporary files
 *.log
 *.tmp
 
