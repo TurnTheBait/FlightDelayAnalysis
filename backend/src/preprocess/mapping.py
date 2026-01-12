@@ -15,8 +15,6 @@ MERGED_DIR = os.path.join(DATA_DIR, "merged")
 
 SCHEDULE_FILE = os.path.join(PROCESSED_DIR, "schedule", "clean_schedule_23-24.csv")
 FLIGHT_LIST_FILE = os.path.join(PROCESSED_DIR, "flights_filtered", "flight_list_filtered_2023_2024.csv")
-
-# PUNTA AL CSV UNICO CREATO PRIMA
 EVENTS_FILE = os.path.join(PROCESSED_DIR, "flight_events_processed", "flight_events_full.csv")
 
 AIRPORTS_FILE = os.path.join(PROCESSED_DIR, "airports", "airports_filtered.csv")
