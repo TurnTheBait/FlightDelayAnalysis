@@ -9,16 +9,16 @@ The final objective is to study the correlation between weather conditions and f
 
 ## 👥 Development Team
 
-* **Cesari Matteo**
-* **Girolamo Davide**
+- **Cesari Matteo**
+- **Girolamo Davide**
 
-## 🤝 Collaborazione e Supervisione
+## 🤝 Collaboration and Supervision
 
 This thesis project is carried out in collaboration with **flAI**.
 
-* **flAI Website:** [https://www.flai-analytics.com/blog/website](https://www.flai-analytics.com/blog/website)
+- **flAI Website:** [https://www.flai-analytics.com/blog/website](https://www.flai-analytics.com/blog/website)
 
 ### Supervisors
 
-* **Prof. Cattaneo Mattia**
-* **Prof. Birolini Sebastian**
+- **Prof. Cattaneo Mattia**
+- **Prof. Birolini Sebastian**

@@ -9,3 +9,9 @@ meteostat
 numpy
 timezonefinder
 pytz
+feedparser
+ntscraper
+torch
+transformers
+scipy
+seaborn

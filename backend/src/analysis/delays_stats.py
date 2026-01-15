@@ -1,5 +1,12 @@
 import pandas as pd
+import os
 import sys
+
+current_script_dir = os.path.dirname(os.path.abspath(__file__))
+src_dir = os.path.dirname(current_script_dir)
+backend_dir = os.path.dirname(src_dir)
+
+INPUT_FILE = os.path.join(backend_dir, 'data', 'processed', 'delays', 'delays_consolidated_filtered.csv')
 
 def analyze_delays(file_path):
     print(f"Loading data from {file_path}...")
@@ -77,14 +84,5 @@ def analyze_delays(file_path):
     else:
         print("Column 'SchedArrApt' not found.")
 
-    print("\nTop 10 Most Punctual Airlines (Arrivals):")
-    if 'AirlineCode' in df_operated.columns:
-        airline_stats = df_operated.groupby('AirlineCode')['MinLateArrived'].agg(['count', lambda x: (x < 15).mean() * 100])
-        airline_stats.columns = ['Flights', 'OnTimePct']
-        airline_stats = airline_stats[airline_stats['Flights'] > 100].sort_values('OnTimePct', ascending=False)
-        print(airline_stats.head(10).to_string(formatters={'OnTimePct': '{:.2f}%'.format}))
-    else:
-        print("Column 'AirlineCode' not found.")
-
 if __name__ == "__main__":
-    analyze_delays("/Users/davidegirolamo/Programming/FlightDelayAnalysis/FlightDelayAnalysis/backend/data/processed/delays/delays_consolidated_filtered.csv")
+    analyze_delays(INPUT_FILE)

@@ -1,0 +1,62 @@
+{
+  "EN": {
+    "delays": [
+      "delay", "cancelled", "stuck at airport", "waiting for hours", "missed connection", 
+      "flight chaos", "nightmare", "strike", "grounded", "technical issue", 
+      "baggage claim", "lost luggage", "security queue", "compensation", "overbooking"
+    ],
+    "noise": [
+      "noise", "loud aircraft", "flight path", "sleepless", "woke me up", 
+      "low flying", "noise pollution", "decibels", "earplugs", "curfew", 
+      "runway expansion", "vibration", "residents protest"
+    ]
+  },
+  "IT": {
+    "delays": [
+      "ritardo", "cancellato", "bloccato in aeroporto", "attesa infinita", "coincidenza persa", 
+      "caos voli", "disastro", "sciopero", "a terra", "guasto tecnico", 
+      "bagagli smarriti", "code controlli", "rimborso", "overbooking", "disagi"
+    ],
+    "noise": [
+      "rumore aerei", "aerei bassi", "non si dorme", "inquinamento acustico", "rombo", 
+      "troppo casino", "rotte aeree", "decibel", "vibrazioni", "coprifuoco", 
+      "protesta residenti", "insonorizzazione", "sorvolo"
+    ]
+  },
+  "DE": {
+    "delays": [
+      "verspätung", "annulliert", "flugausfall", "warten", "anschluss verpasst", 
+      "chaos", "stundenlang", "streik", "gestrichen", "technischer defekt", 
+      "koffer weg", "schlange", "entschädigung", "bodenpersonal", "wartezeit"
+    ],
+    "noise": [
+      "fluglärm", "lärmbelästigung", "zu laut", "nachtflugverbot", "schlaflos", 
+      "einflugschneise", "donnern", "schallschutz", "bürgerinitiative", "nachtruhe", 
+      "tieflog", "dezibel", "flugroute"
+    ]
+  },
+  "FR": {
+    "delays": [
+      "retard", "annulé", "bloqué", "attente interminable", "correspondance ratée", 
+      "galère", "vols annulés", "grève", "panne", "cloué au sol", 
+      "bagages perdus", "file d'attente", "indemnisation", "pagaille", "perturbations"
+    ],
+    "noise": [
+      "bruit avions", "nuisances sonores", "réveillé", "couloir aérien", "trop bruyant", 
+      "survol", "vacarme", "couvre-feu", "décibels", "riverains en colère", 
+      "isolation phonique", "ras-le-bol", "trajectoires"
+    ]
+  },
+  "ES": {
+    "delays": [
+      "retraso", "cancelado", "atrapado", "espera larga", "perdido vuelo", 
+      "caos aéreo", "vergüenza", "huelga", "avería", "en tierra", 
+      "equipaje perdido", "colas", "reclamación", "overbooking", "incidencia"
+    ],
+    "noise": [
+      "ruido aviones", "contaminación acústica", "no puedo dormir", "aviones bajos", "estruendo", 
+      "ruta de vuelo", "decibelios", "quejas vecinos", "toque de queda", "vibraciones", 
+      "aislamiento", "sobrevuelo", "impacto acústico"
+    ]
+  }
+}
