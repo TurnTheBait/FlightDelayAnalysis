@@ -9,9 +9,8 @@ backend_dir = os.path.dirname(src_dir)
 INPUT_FILE = os.path.join(backend_dir, 'data', 'sentiment', 'news_raw_full.csv')
 OUTPUT_FILE = os.path.join(backend_dir, 'data', 'sentiment', 'news_cleaned.csv')
 
-ACCEPTED_YEARS = [2023, 2024, 2025, 2026]
+ACCEPTED_YEARS = [2022,2023, 2024, 2025, 2026]
 
-# Parole che DEVONO esserci (Contesto)
 AVIATION_CONTEXT_WORDS = [
     'airport', 'aeroport', 'flughafen', 'luchthaven', 'aeroporto', 'flygplats',
     'flight', 'volo', 'vuelo', 'flug', 'vlucht', 'flyg',
@@ -29,12 +28,12 @@ AVIATION_CONTEXT_WORDS = [
     'emergency', 'emergenza', 'notlandung'
 ]
 
-# Parole che NON devono esserci (Spam specifico per news)
+
 EXCLUDE_WORDS = [
-    'hiring', 'job', 'vacancy', 'career', 'recruitment', # Lavoro
-    'concert', 'festival', 'band', 'song', 'album', # Musica
-    'lego', 'toy', 'game', # Giochi
-    'sport', 'football', 'match', 'cup' # Sport (a volte gli aeroporti sponsorizzano)
+    'hiring', 'job', 'vacancy', 'career', 'recruitment', 
+    'concert', 'festival', 'band', 'song', 'album', 
+    'lego', 'toy', 'game', 
+    'sport', 'football', 'match', 'cup' 
 ]
 
 def check_date(date_str):
@@ -50,15 +49,12 @@ def is_contextually_relevant(row):
     title = str(row['title']).lower()
     city = str(row['search_term']).lower()
     
-    # 1. Filtro Città
     if city not in title:
         return False
-        
-    # 2. Filtro Esclusione (Rimuove spam noto)
+    
     if any(bad in title for bad in EXCLUDE_WORDS):
         return False
 
-    # 3. Filtro Inclusione (Richiede contesto aeronautico)
     has_aviation_context = any(word in title for word in AVIATION_CONTEXT_WORDS)
     
     return has_aviation_context

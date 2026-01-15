@@ -34,7 +34,7 @@ def get_nearest_meteostat_station(lat: float, lon: float):
         if len(station) == 0:
             return None
 
-        return station.index[0]  # Meteostat station ID
+        return station.index[0] 
     except Exception:
         return None
 
@@ -49,7 +49,7 @@ def main():
 
     airports = load_european_large_airports()
 
-    start = datetime(2023, 1, 1)
+    start = datetime(2024, 7, 1, 00, 00)
     end = datetime(2024, 12, 31, 23, 59)
 
     for _, row in airports.iterrows():
