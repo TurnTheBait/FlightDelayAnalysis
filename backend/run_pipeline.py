@@ -8,6 +8,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 scripts = [
     "src/download/google_news_scraper.py",
     "src/download/reddit_scraper.py",
+    "src/download/skytrax_scraper.py",
     "src/preprocess/clean_news.py",
     "src/preprocess/combine_data.py",
     "src/analysis/sentiment_analysis.py",
@@ -29,11 +30,9 @@ def run_script(script_path):
     
     try:
         result = subprocess.run([sys.executable, full_path], check=True)
-        
         elapsed = time.time() - start_time
         print(f"\nCOMPLETATO: {script_path} in {elapsed:.2f} secondi.")
         return True
-        
     except subprocess.CalledProcessError as e:
         print(f"\nFALLITO: {script_path} si è interrotto con errore.")
         return False

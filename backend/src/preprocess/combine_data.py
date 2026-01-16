@@ -7,6 +7,7 @@ backend_dir = os.path.dirname(src_dir)
 
 NEWS_PATH = os.path.join(backend_dir, 'data', 'sentiment', 'news_cleaned.csv')
 REDDIT_PATH = os.path.join(backend_dir, 'data', 'sentiment', 'reddit_raw.csv')
+SKYTRAX_PATH = os.path.join(backend_dir, 'data', 'sentiment', 'skytrax_raw.csv')
 OUTPUT_PATH = os.path.join(backend_dir, 'data', 'sentiment', 'combined_data.csv')
 
 dfs = []
@@ -25,7 +26,7 @@ if os.path.exists(NEWS_PATH):
             })
             dfs.append(df_news_clean)
     except Exception as e:
-        print(f"Error reading news file: {e}")
+        print(f"Error reading news: {e}")
 
 if os.path.exists(REDDIT_PATH):
     print(f"Loading Reddit data from {REDDIT_PATH}...")
@@ -33,7 +34,6 @@ if os.path.exists(REDDIT_PATH):
         df_reddit = pd.read_csv(REDDIT_PATH)
         if not df_reddit.empty:
             df_reddit['full_text'] = df_reddit['title'].astype(str) + " " + df_reddit['text'].astype(str)
-            
             df_reddit_clean = pd.DataFrame({
                 'airport_code': df_reddit['airport_code'],
                 'city': df_reddit['search_term'],
@@ -43,19 +43,35 @@ if os.path.exists(REDDIT_PATH):
             })
             dfs.append(df_reddit_clean)
     except Exception as e:
-        print(f"Error reading reddit file: {e}")
+        print(f"Error reading reddit: {e}")
+
+if os.path.exists(SKYTRAX_PATH):
+    print(f"Loading Skytrax data from {SKYTRAX_PATH}...")
+    try:
+        df_skytrax = pd.read_csv(SKYTRAX_PATH)
+        if not df_skytrax.empty:
+            df_skytrax['full_text'] = df_skytrax['title'].astype(str) + " " + df_skytrax['text'].astype(str)
+            df_skytrax_clean = pd.DataFrame({
+                'airport_code': df_skytrax['airport_code'],
+                'city': df_skytrax['search_term'],
+                'source': 'Skytrax',
+                'text': df_skytrax['full_text'],
+                'date': df_skytrax['date']
+            })
+            dfs.append(df_skytrax_clean)
+    except Exception as e:
+        print(f"Error reading skytrax: {e}")
 
 if not dfs:
-    print("No data found to merge.")
+    print("No data found.")
     exit()
 
 df_combined = pd.concat(dfs, ignore_index=True)
-
 df_combined.dropna(subset=['text'], inplace=True)
 
 os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
 df_combined.to_csv(OUTPUT_PATH, index=False)
 
-print(f"\nSuccess! Combined dataset saved to: {OUTPUT_PATH}")
+print(f"Combined data saved to {OUTPUT_PATH}")
 print(f"Total records: {len(df_combined)}")
 print(df_combined['source'].value_counts())

@@ -9,6 +9,7 @@ __pycache__/
 backend/src/data/
 *.parquet
 *.csv
+backend/data/raw/delays/BergamoUniReport_*.txt
 
 # Temporary files
 *.log
