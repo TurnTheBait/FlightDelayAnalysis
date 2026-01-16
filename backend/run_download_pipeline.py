@@ -8,8 +8,10 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 scripts = [
     "src/download/google_news_scraper.py",
+    "src/download/google_news_resume.py",
     "src/download/meteostat_downloader.py",
-    "src/download/reddit_scraper.py"
+    "src/download/reddit_scraper.py",
+    "src/download/skytrax_scraper.py"
 ]
 
 def run_script(script_path):

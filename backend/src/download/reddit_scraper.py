@@ -3,6 +3,7 @@ import time
 import os
 import random
 import requests
+from datetime import datetime
 
 current_script_dir = os.path.dirname(os.path.abspath(__file__))
 src_dir = os.path.dirname(current_script_dir)
@@ -10,6 +11,14 @@ backend_dir = os.path.dirname(src_dir)
 
 AIRPORTS_CSV_PATH = os.path.join(backend_dir, 'data', 'processed', 'airports', 'airports_filtered.csv')
 OUTPUT_PATH = os.path.join(backend_dir, 'data', 'sentiment', 'reddit_raw.csv')
+
+USER_AGENTS = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.1 Safari/605.1.15',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36',
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0'
+]
 
 must_have_keywords = ['delay', 'cancelled', 'stuck', 'chaos', 'wait', 'queue', 'missed connection', 'luggage', 'baggage', 'airline', 'airport', 'flight', 'stranded']
 spam_keywords = [
@@ -35,12 +44,30 @@ except Exception as e:
     print(f"Error reading CSV: {e}")
     exit()
 
+def fetch_reddit_url(url, retries=3):
+    for attempt in range(retries):
+        headers = {'User-Agent': random.choice(USER_AGENTS)}
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
+            
+            if response.status_code == 200:
+                return response.json()
+            elif response.status_code == 429:
+                wait_time = random.uniform(30, 60)
+                print(f"   Rate limit hit (429). Sleeping {wait_time:.1f}s...")
+                time.sleep(wait_time)
+                continue
+            elif response.status_code in [403, 503]:
+                time.sleep(random.uniform(5, 10))
+                continue
+            else:
+                return None
+        except Exception:
+            time.sleep(2)
+    return None
+
 results_list = []
 print(f"\nStarting ENHANCED Reddit scraping for {len(df_airports)} airports...")
-
-headers = {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36'
-}
 
 for index, row in df_airports.iterrows():
     full_name = str(row['name'])
@@ -56,63 +83,61 @@ for index, row in df_airports.iterrows():
     for query in queries:
         print(f"[{index+1}/{len(df_airports)}] {code} - Searching: '{query}'")
         
-        try:
-            url = f"https://www.reddit.com/search.json?q={query}&sort=relevance&t=year&limit=10" 
-            response = requests.get(url, headers=headers, timeout=10)
-            
-            if response.status_code == 200:
-                data = response.json()
-                posts = data.get('data', {}).get('children', [])
-                
-                found_count = 0
-                if posts:
-                    for post in posts:
-                        post_data = post['data']
-                        title = post_data.get('title', '')
-                        text = post_data.get('selftext', '')
-                        post_url = post_data.get('permalink')
-                        
-                        full_text = (str(title) + " " + str(text)).lower()
-                        
-                        if post_url in seen_urls:
-                            continue
-                            
-                        if any(spam in full_text for spam in spam_keywords):
-                            continue
-                            
-                        if city_name.lower() not in full_text:
-                            continue
-                            
-                        if not any(k in full_text for k in must_have_keywords):
-                            continue
-
-                        seen_urls.add(post_url)
-                        results_list.append({
-                            "airport_code": code,
-                            "search_term": city_name,
-                            "source": "Reddit",
-                            "title": title,
-                            "text": text[:500],
-                            "author": post_data.get('author'),
-                            "url": f"https://reddit.com{post_url}",
-                            "created_utc": post_data.get('created_utc')
-                        })
-                        found_count += 1
-                
-                if found_count > 0:
-                    print(f"   Saved {found_count} new posts.")
-                
-            elif response.status_code == 429:
-                print("   Rate limit hit. Sleeping 5s...")
-                time.sleep(5)
-                
-        except Exception as e:
-            print(f"   Error scraping {code}: {e}")
+        url = f"https://www.reddit.com/search.json?q={query}&sort=relevance&t=year&limit=10" 
+        data = fetch_reddit_url(url)
         
-        time.sleep(random.uniform(1.0, 2.0))
+        if data and 'data' in data and 'children' in data['data']:
+            posts = data['data']['children']
+            found_count = 0
+            
+            for post in posts:
+                post_data = post['data']
+                title = post_data.get('title', '')
+                text = post_data.get('selftext', '')
+                post_url = post_data.get('permalink')
+                
+                full_text = (str(title) + " " + str(text)).lower()
+                
+                if post_url in seen_urls:
+                    continue
+                    
+                if any(spam in full_text for spam in spam_keywords):
+                    continue
+                    
+                if city_name.lower() not in full_text:
+                    continue
+                    
+                if not any(k in full_text for k in must_have_keywords):
+                    continue
+
+                seen_urls.add(post_url)
+                
+                created_utc = post_data.get('created_utc')
+                date_str = datetime.utcfromtimestamp(created_utc).strftime('%Y-%m-%d %H:%M:%S')
+
+                results_list.append({
+                    "airport_code": code,
+                    "search_term": city_name,
+                    "source": "Reddit",
+                    "title": title,
+                    "text": text[:1000],
+                    "author": post_data.get('author'),
+                    "url": f"https://reddit.com{post_url}",
+                    "created_utc": date_str
+                })
+                found_count += 1
+            
+            if found_count > 0:
+                print(f"   Saved {found_count} new posts.")
+        
+        time.sleep(random.uniform(2.0, 4.0))
+
+    if (index + 1) % 5 == 0:
+        df_temp = pd.DataFrame(results_list)
+        os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
+        df_temp.to_csv(OUTPUT_PATH, index=False)
 
 df_results = pd.DataFrame(results_list)
-
 os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
 df_results.to_csv(OUTPUT_PATH, index=False)
 
