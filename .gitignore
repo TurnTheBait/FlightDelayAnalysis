@@ -11,6 +11,9 @@ backend/src/data/
 *.csv
 backend/data/raw/delays/BergamoUniReport_*.txt
 
+#Results
+backend/results/
+
 # Temporary files
 *.log
 *.tmp
