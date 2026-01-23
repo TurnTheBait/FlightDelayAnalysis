@@ -17,29 +17,99 @@ df = pd.read_csv(INPUT_FILE)
 agg_data = df.groupby('city')['stars_score'].agg(['mean', 'count']).reset_index()
 agg_data = agg_data.sort_values('mean', ascending=False)
 
-plt.figure(figsize=(12, 8))
-sns.set_theme(style="whitegrid")
+top_n = 15
+top_airports = agg_data.head(top_n)
+bottom_airports = agg_data.tail(top_n)
+
+plt.figure(figsize=(18, 10))
+
+plt.subplot(1, 2, 1)
+sns.barplot(x='mean', y='city', data=top_airports, palette='RdYlGn', edgecolor='black')
+plt.title(f'Top {top_n} Airports by Sentiment', fontsize=14, weight='bold')
+plt.xlabel('Average Score (1-5)')
+plt.ylabel('')
+plt.xlim(0, 5.5)
+plt.axvline(x=3, color='black', linestyle='--', linewidth=1)
+
+for i, row in enumerate(top_airports.itertuples()):
+   plt.text(row.mean + 0.1, i, f"{row.mean:.1f}", va='center', fontsize=10, weight='bold')
+
+plt.subplot(1, 2, 2)
+sns.barplot(x='mean', y='city', data=bottom_airports, palette='RdYlGn', edgecolor='black')
+plt.title(f'Bottom {top_n} Airports by Sentiment', fontsize=14, weight='bold')
+plt.xlabel('Average Score (1-5)')
+plt.ylabel('')
+plt.xlim(0, 5.5)
+plt.axvline(x=3, color='black', linestyle='--', linewidth=1)
+
+for i, row in enumerate(bottom_airports.itertuples()):
+   plt.text(row.mean + 0.1, i, f"{row.mean:.1f}", va='center', fontsize=10, weight='bold')
+
+plt.tight_layout()
+output_ranking = os.path.join(backend_dir, 'results', 'figures', 'sentiment_ranking_top_bottom.png')
+os.makedirs(os.path.dirname(output_ranking), exist_ok=True)
+plt.savefig(output_ranking, dpi=300)
+print(f"Ranking plot saved to: {output_ranking}")
+
+plt.figure(figsize=(10, 6))
+sns.scatterplot(data=agg_data, x='count', y='mean', size='count', sizes=(50, 400), hue='mean', palette='RdYlGn', edgecolor='black', legend=False)
+
+top_volume = agg_data.nlargest(5, 'count')
+top_score = agg_data.nlargest(3, 'mean')
+bottom_score = agg_data.nsmallest(3, 'mean')
+
+points_to_label = pd.concat([top_volume, top_score, bottom_score]).drop_duplicates()
+
+for row in points_to_label.itertuples():
+   plt.text(row.count, row.mean, row.city, fontsize=9, weight='bold', alpha=0.8)
+
+plt.title('Volume vs. Sentiment: Do busier airports have worse scores?', fontsize=14, weight='bold')
+plt.xlabel('Number of Reviews', fontsize=12)
+plt.ylabel('Average Sentiment Score', fontsize=12)
+plt.grid(True, linestyle='--', alpha=0.6)
+plt.axhline(y=3, color='gray', linestyle='--', label='Neutral Threshold')
+
+output_scatter = os.path.join(backend_dir, 'results', 'figures', 'sentiment_scatter.png')
+plt.savefig(output_scatter, dpi=300)
+print(f"Scatter plot saved to: {output_scatter}")
+
+agg_data['rounded_score'] = agg_data['mean'].round(1)
+
+code_map = df[['city', 'airport_code']].drop_duplicates().groupby('city')['airport_code'].first()
+agg_data['code'] = agg_data['city'].map(code_map)
+
+import textwrap
+def create_label(codes):
+    code_list = list(codes)
+    text = ", ".join(code_list)
+    return textwrap.fill(text, width=40)
+
+aggregated_scores = agg_data.groupby('rounded_score').agg({
+    'code': create_label,
+    'count': 'sum'
+}).reset_index()
+
+aggregated_scores = aggregated_scores.sort_values('rounded_score', ascending=False)
+
+total_lines = aggregated_scores['code'].apply(lambda x: x.count('\n') + 1).sum()
+fig_height_agg = max(10, len(aggregated_scores) * 0.4 + total_lines * 0.25)
+plt.figure(figsize=(16, fig_height_agg))
 
 norm = plt.Normalize(1, 5)
-colors = plt.cm.RdYlGn(norm(agg_data['mean']))
+colors = plt.cm.RdYlGn(norm(aggregated_scores['rounded_score']))
 
-ax = sns.barplot(x='mean', y='city', data=agg_data, palette=colors, edgecolor='black')
+ax_agg = sns.barplot(x='rounded_score', y='code', data=aggregated_scores, palette=colors, edgecolor='black')
 
-plt.title('Sentiment Analysis: Airport Perception Ranking', fontsize=16, weight='bold')
-plt.xlabel('Average Sentiment Score (1=Bad, 5=Good)', fontsize=12)
-plt.ylabel('', fontsize=12)
-plt.axvline(x=3, color='black', linestyle='--', linewidth=1, label='Neutral Threshold')
+plt.title('Aggregated Sentiment Ranking (Grouped by Score)', fontsize=16, weight='bold')
+plt.xlabel('Sentiment Score', fontsize=12)
+plt.ylabel('Airports (Codes)', fontsize=12)
 plt.xlim(0, 5.5)
+plt.axvline(x=3, color='black', linestyle='--', linewidth=1)
 
-for i, row in enumerate(agg_data.itertuples()):
-    label = f"{row.mean:.1f} (n={row.count})"
-    ax.text(row.mean + 0.05, i, label, va='center', fontsize=10, color='black', weight='bold')
+for i, row in enumerate(aggregated_scores.itertuples()):
+    ax_agg.text(row.rounded_score + 0.05, i, f"{row.rounded_score:.1f}", va='center', fontsize=10, weight='bold')
 
-plt.legend(loc='lower right')
 plt.tight_layout()
-
-os.makedirs(os.path.dirname(OUTPUT_IMG), exist_ok=True)
-plt.savefig(OUTPUT_IMG, dpi=300)
-
-print(f"Plot saved to: {OUTPUT_IMG}")
-plt.show()
+output_aggregated = os.path.join(backend_dir, 'results', 'figures', 'sentiment_aggregated.png')
+plt.savefig(output_aggregated, dpi=300, bbox_inches='tight', pad_inches=1.0)
+print(f"Aggregated plot saved to: {output_aggregated}")
