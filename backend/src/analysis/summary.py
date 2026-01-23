@@ -10,7 +10,7 @@ SCORED_DATA_PATH = os.path.join(backend_dir, 'data', 'sentiment', 'sentiment_sco
 AIRPORTS_PATH = os.path.join(backend_dir, 'data', 'processed', 'airports', 'airports_filtered.csv')
 
 OUTPUT_CSV = os.path.join(backend_dir, 'results', 'tables', 'airport_analysis_summary.csv')
-OUTPUT_EXCEL = os.path.join(backend_dir, 'results', 'tables', 'airport_analysis_summary.xlsx')
+
 
 def main():
     if not os.path.exists(SCORED_DATA_PATH):
@@ -70,13 +70,7 @@ def main():
     os.makedirs(os.path.dirname(OUTPUT_CSV), exist_ok=True)
     summary.to_csv(OUTPUT_CSV, index=False)
     
-    try:
-        summary.to_excel(OUTPUT_EXCEL, index=False)
-        print(f"File Excel creato: {OUTPUT_EXCEL}")
-    except ImportError:
-        pass
-
-    print(f"Analisi completata. Tabella salvata in: {OUTPUT_CSV}")
+    print(f"Analysis complete. Tabella salvata in: {OUTPUT_CSV}")
     print(summary[['airport_code', 'iso_country', 'total_mentions', 'global_sentiment']].head())
 
 if __name__ == "__main__":

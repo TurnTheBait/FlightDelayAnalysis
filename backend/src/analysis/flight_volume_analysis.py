@@ -1,0 +1,97 @@
+import pandas as pd
+import os
+import numpy as np
+
+current_script_dir = os.path.dirname(os.path.abspath(__file__))
+src_dir = os.path.dirname(current_script_dir)
+backend_dir = os.path.dirname(src_dir)
+
+SENTIMENT_SUMMARY_PATH = os.path.join(backend_dir, 'results', 'tables', 'airport_analysis_summary.csv')
+DELAYS_DATA_PATH = os.path.join(backend_dir, 'data', 'processed', 'delays', 'delays_consolidated_filtered.csv')
+
+OUTPUT_CSV = os.path.join(backend_dir, 'results', 'tables', 'airport_volume_analysis_summary.csv')
+
+
+def min_max_normalize(series):
+    return (series - series.min()) / (series.max() - series.min())
+
+def main():
+    print(f"Loading sentiment summary from: {SENTIMENT_SUMMARY_PATH}")
+    if not os.path.exists(SENTIMENT_SUMMARY_PATH):
+        print(f"ERROR: File {SENTIMENT_SUMMARY_PATH} not found.")
+        return
+    
+    df_sentiment = pd.read_csv(SENTIMENT_SUMMARY_PATH)
+    
+    print(f"Loading flight data from: {DELAYS_DATA_PATH}")
+    if not os.path.exists(DELAYS_DATA_PATH):
+        print(f"ERROR: File {DELAYS_DATA_PATH} not found.")
+        return
+    
+    df_flights = pd.read_csv(DELAYS_DATA_PATH, usecols=['SchedDepApt', 'SchedArrApt'], low_memory=False)
+    
+    AIRPORTS_PATH = os.path.join(backend_dir, 'data', 'processed', 'airports', 'airports_filtered.csv')
+    if os.path.exists(AIRPORTS_PATH):
+        print(f"Loading airport mapping from: {AIRPORTS_PATH}")
+        df_airports = pd.read_csv(AIRPORTS_PATH)
+        
+        iata_to_ident = dict(zip(df_airports['iata_code'], df_airports['ident']))
+        
+        df_flights['SchedDepApt'] = df_flights['SchedDepApt'].map(iata_to_ident).fillna(df_flights['SchedDepApt'])
+        df_flights['SchedArrApt'] = df_flights['SchedArrApt'].map(iata_to_ident).fillna(df_flights['SchedArrApt'])
+    else:
+         print(f"WARNING: Airports file not found at {AIRPORTS_PATH}. Assuming flight data uses same codes as sentiment data.")
+
+    print("Calculating flight volumes...")
+    dep_counts = df_flights['SchedDepApt'].value_counts()
+    arr_counts = df_flights['SchedArrApt'].value_counts()
+    
+    all_airports = set(dep_counts.index).union(set(arr_counts.index))
+    
+    volume_data = []
+    for airport in all_airports:
+        dep = dep_counts.get(airport, 0)
+        arr = arr_counts.get(airport, 0)
+        total = dep + arr
+        volume_data.append({'airport_code': airport, 'total_flights': total})
+        
+    df_volume = pd.DataFrame(volume_data)
+    
+    df_merged = df_sentiment.merge(df_volume, on='airport_code', how='left')
+    
+    df_merged['total_flights'] = df_merged['total_flights'].fillna(0)
+    
+    df_merged = df_merged[(df_merged['total_flights'] > 0) & (df_merged['global_sentiment'].notna())].copy()
+
+    print("Calculating Composite Score...")
+    
+
+    df_merged['global_sentiment'] = df_merged['global_sentiment'] * 2
+
+    df_merged['sentiment_norm'] = (df_merged['global_sentiment'] - 2) / 8
+    
+    df_merged['log_volume'] = np.log10(df_merged['total_flights'] + 1)
+    df_merged['volume_norm'] = min_max_normalize(df_merged['log_volume'])
+    
+    w_sentiment = 0.7
+    w_volume = 0.3
+    
+    df_merged['composite_score'] = (df_merged['sentiment_norm'] * w_sentiment) + (df_merged['volume_norm'] * w_volume)
+    
+    df_merged['composite_score_scaled'] = df_merged['composite_score'] * 10
+    
+    df_merged['composite_score'] = (df_merged['sentiment_norm'] * w_sentiment) + (df_merged['volume_norm'] * w_volume)
+    
+    df_merged['composite_score_scaled'] = df_merged['composite_score'] * 10
+    
+    df_merged = df_merged.sort_values('composite_score_scaled', ascending=False)
+    
+    os.makedirs(os.path.dirname(OUTPUT_CSV), exist_ok=True)
+    df_merged.to_csv(OUTPUT_CSV, index=False)
+        
+    print(f"Analysis complete. Results saved to: {OUTPUT_CSV}")
+    print("\nTop 5 Airports by Volume-Weighted Score:")
+    print(df_merged[['airport_code', 'name', 'total_flights', 'global_sentiment', 'composite_score_scaled']].head())
+
+if __name__ == "__main__":
+    main()
