@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 import matplotlib as mpl
+import textwrap
 
 current_script_dir = os.path.dirname(os.path.abspath(__file__))
 src_dir = os.path.dirname(current_script_dir)
@@ -106,6 +107,51 @@ def main():
     output_scatter = os.path.join(OUTPUT_DIR, 'volume_vs_sentiment.png')
     plt.savefig(output_scatter, dpi=300)
     print(f"Scatter plot saved to: {output_scatter}")
+    
+    df['rounded_score'] = df['composite_score_scaled'].round(1)
+    
+    def create_label(codes):
+        code_list = list(codes)
+        if len(code_list) > 10:
+             text = ", ".join(code_list[:10]) + f", (+{len(code_list)-10})"
+        else:
+            text = ", ".join(code_list)
+        return textwrap.fill(text, width=40)
+
+    aggregated_wa = df.groupby('rounded_score').agg({
+        'airport_code': create_label,
+        'composite_score_scaled': 'mean' 
+    }).reset_index()
+    
+    aggregated_wa = aggregated_wa.sort_values('rounded_score', ascending=False)
+    
+    total_lines = aggregated_wa['airport_code'].apply(lambda x: x.count('\n') + 1).sum()
+    fig_height_agg = max(10, len(aggregated_wa) * 0.5 + total_lines * 0.25)
+    
+    plt.figure(figsize=(16, fig_height_agg))
+    
+    norm_score = mpl.colors.Normalize(vmin=0, vmax=10)
+    cmap_score = mpl.cm.RdYlGn
+    
+    colors_agg = [cmap_score(norm_score(v)) for v in aggregated_wa['rounded_score']]
+    
+    ax_agg = sns.barplot(x='rounded_score', y='airport_code', data=aggregated_wa, palette=colors_agg, edgecolor='black')
+    
+    plt.title('Aggregated Composite Ranking (Sentiment + Volume)', fontsize=16, weight='bold')
+    plt.xlabel('Composite Score (0-10)', fontsize=12)
+    plt.ylabel('Airports (Codes)', fontsize=12)
+    plt.xlim(0, 10.5)
+    
+    for i, row in enumerate(aggregated_wa.itertuples()):
+        val = row.rounded_score
+        ax_agg.text(row.rounded_score + 0.05, i, f"{val:.1f}", va='center', fontsize=10, weight='bold')
+
+    plt.grid(True, axis='x', linestyle='--', alpha=0.3)
+    plt.tight_layout()
+    
+    output_aggregated_comp = os.path.join(OUTPUT_DIR, 'composite_aggregated_ranking.png')
+    plt.savefig(output_aggregated_comp, dpi=300, bbox_inches='tight', pad_inches=0.5)
+    print(f"Aggregated composite plot saved to: {output_aggregated_comp}")
 
 if __name__ == "__main__":
     main()

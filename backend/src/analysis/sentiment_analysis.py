@@ -26,12 +26,13 @@ def calculate_sentiment(text):
         outputs = model(**inputs)
     
     probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
-    score_idx = torch.argmax(probs).item()
+
+    probs_np = probs.cpu().numpy()[0]
     
-    stars = score_idx + 1 
+    stars = sum((i + 1) * p for i, p in enumerate(probs_np))
     
-    if stars <= 2: polarity = -1
-    elif stars == 3: polarity = 0
+    if stars <= 2.4: polarity = -1
+    elif stars <= 3.6: polarity = 0
     else: polarity = 1
     
     return polarity, stars
@@ -44,10 +45,31 @@ print(f"Reading data from: {INPUT_FILE}")
 df = pd.read_csv(INPUT_FILE)
 
 print("Starting sentiment analysis...")
-results = df['text'].apply(lambda x: calculate_sentiment(x))
+from datetime import datetime
+import pytz
 
+CURRENT_DATE = datetime(2026, 1, 1, tzinfo=pytz.UTC)
+
+def calculate_time_weight(date_str):
+    try:
+        dt = pd.to_datetime(date_str, utc=True)
+        if pd.isna(dt):
+            return 0.5
+        
+        age_days = (CURRENT_DATE - dt).days
+        if age_days < 0: age_days = 0
+        
+        weight = 0.5 ** (age_days / 365.0)
+        return weight
+    except:
+        return 0.5
+
+results = df['text'].apply(lambda x: calculate_sentiment(x))
 df['sentiment_polarity'] = [res[0] for res in results]
 df['stars_score'] = [res[1] for res in results]
+
+print("Calculating time weights...")
+df['time_weight'] = df['date'].apply(calculate_time_weight)
 
 os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
 df.to_csv(OUTPUT_FILE, index=False)

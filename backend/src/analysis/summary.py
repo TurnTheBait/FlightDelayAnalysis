@@ -22,10 +22,17 @@ def main():
     
     print(f"Caricamento anagrafica aeroporti da: {AIRPORTS_PATH}")
     df_airports = pd.read_csv(AIRPORTS_PATH, low_memory=False)
+    
+    def weighted_avg(x):
+        if x['time_weight'].sum() == 0:
+            return x['stars_score'].mean()
+        return (x['stars_score'] * x['time_weight']).sum() / x['time_weight'].sum()
 
-    stats = df_scored.groupby(['airport_code', 'source']).agg(
-        count=('text', 'count'),
-        avg_score=('stars_score', 'mean') 
+    stats = df_scored.groupby(['airport_code', 'source']).apply(
+        lambda x: pd.Series({
+            'count': len(x),
+            'avg_score': weighted_avg(x)
+        })
     ).reset_index()
 
     pivot_stats = stats.pivot(index='airport_code', columns='source', values=['count', 'avg_score'])
