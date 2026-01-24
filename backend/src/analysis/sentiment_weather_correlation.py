@@ -71,7 +71,15 @@ def plot_results(df, output_dir):
     plt.title('Global Sentiment vs Average Departure Delay')
     plt.xlabel('Global Sentiment Score (1-10)')
     plt.ylabel('Average Departure Delay (min)')
-    plt.savefig(os.path.join(output_dir, 'sentiment_vs_delay.png'))
+    plt.savefig(os.path.join(output_dir, 'sentiment_vs_departure_delay.png'))
+    plt.close()
+    
+    plt.figure(figsize=(10, 6))
+    sns.regplot(x='global_sentiment', y='MinLateArrived', data=df, scatter_kws={'alpha':0.5}, line_kws={'color':'orange'})
+    plt.title('Global Sentiment vs Average Arrival Delay')
+    plt.xlabel('Global Sentiment Score (1-10)')
+    plt.ylabel('Average Arrival Delay (min)')
+    plt.savefig(os.path.join(output_dir, 'sentiment_vs_arrival_delay.png'))
     plt.close()
     
     plt.figure(figsize=(10, 6))
