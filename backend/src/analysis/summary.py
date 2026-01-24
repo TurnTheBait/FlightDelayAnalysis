@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 import numpy as np
+import sys
 
 current_script_dir = os.path.dirname(os.path.abspath(__file__))
 src_dir = os.path.dirname(current_script_dir)
@@ -11,6 +12,8 @@ AIRPORTS_PATH = os.path.join(backend_dir, 'data', 'processed', 'airports', 'airp
 
 OUTPUT_CSV = os.path.join(backend_dir, 'results', 'tables', 'airport_analysis_summary.csv')
 
+sys.path.append(src_dir)
+from utils.metrics import calculate_weighted_average
 
 def main():
     if not os.path.exists(SCORED_DATA_PATH):
@@ -23,16 +26,12 @@ def main():
     print(f"Caricamento anagrafica aeroporti da: {AIRPORTS_PATH}")
     df_airports = pd.read_csv(AIRPORTS_PATH, low_memory=False)
     
-    def weighted_avg(x):
-        if x['time_weight'].sum() == 0:
-            return x['stars_score'].mean()
-        return (x['stars_score'] * x['time_weight']).sum() / x['time_weight'].sum()
-
     stats = df_scored.groupby(['airport_code', 'source']).apply(
         lambda x: pd.Series({
             'count': len(x),
-            'avg_score': weighted_avg(x)
-        })
+            'avg_score': calculate_weighted_average(x, 'stars_score', 'time_weight', fallback_to_mean=True)
+        }),
+        include_groups=False
     ).reset_index()
 
     pivot_stats = stats.pivot(index='airport_code', columns='source', values=['count', 'avg_score'])

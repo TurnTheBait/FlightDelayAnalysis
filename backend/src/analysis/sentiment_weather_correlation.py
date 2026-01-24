@@ -4,12 +4,11 @@ import matplotlib.pyplot as plt
 import os
 import numpy as np
 from pathlib import Path
+import sys
 
-def weighted_sentiment(x):
-    total_weight = x['time_weight'].sum()
-    if total_weight == 0:
-        return np.nan
-    return (x['stars_score'] * x['time_weight']).sum() / total_weight
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from utils.metrics import calculate_weighted_average
+
 
 def load_data(flights_path, sentiment_path):
     print(f"Loading flights data from {flights_path}...")
@@ -26,9 +25,10 @@ def aggregate_data(df_flights, df_sentiment):
     
     sentiment_agg = df_sentiment.groupby('airport_code').apply(
         lambda x: pd.Series({
-            'global_sentiment': weighted_sentiment(x),
+            'global_sentiment': calculate_weighted_average(x, 'stars_score', 'time_weight', scale_factor=2),
             'sentiment_count': len(x)
-        })
+        }),
+        include_groups=False
     ).reset_index()
     
     metrics = {
@@ -69,7 +69,7 @@ def plot_results(df, output_dir):
     plt.figure(figsize=(10, 6))
     sns.regplot(x='global_sentiment', y='MinLateDeparted', data=df, scatter_kws={'alpha':0.5}, line_kws={'color':'red'})
     plt.title('Global Sentiment vs Average Departure Delay')
-    plt.xlabel('Global Sentiment Score (1-5)')
+    plt.xlabel('Global Sentiment Score (1-10)')
     plt.ylabel('Average Departure Delay (min)')
     plt.savefig(os.path.join(output_dir, 'sentiment_vs_delay.png'))
     plt.close()
@@ -77,7 +77,7 @@ def plot_results(df, output_dir):
     plt.figure(figsize=(10, 6))
     sns.regplot(x='global_sentiment', y='Dep_prcp', data=df, scatter_kws={'alpha':0.5}, line_kws={'color':'blue'})
     plt.title('Global Sentiment vs Average Precipitation')
-    plt.xlabel('Global Sentiment Score (1-5)')
+    plt.xlabel('Global Sentiment Score (1-10)')
     plt.ylabel('Average Precipitation (mm)')
     plt.savefig(os.path.join(output_dir, 'sentiment_vs_weather_prcp.png'))
     plt.close()
@@ -85,7 +85,7 @@ def plot_results(df, output_dir):
     plt.figure(figsize=(10, 6))
     sns.regplot(x='global_sentiment', y='Dep_wspd', data=df, scatter_kws={'alpha':0.5}, line_kws={'color':'green'})
     plt.title('Global Sentiment vs Average Wind Speed')
-    plt.xlabel('Global Sentiment Score (1-5)')
+    plt.xlabel('Global Sentiment Score (1-10)')
     plt.ylabel('Average Wind Speed (km/h)')
     plt.savefig(os.path.join(output_dir, 'sentiment_vs_weather_wspd.png'))
     plt.close()
