@@ -15,6 +15,7 @@ scripts = [
     "src/analysis/sentiment_analysis.py",
     "src/analysis/summary.py",
     "src/analysis/flight_volume_analysis.py",
+    "src/analysis/sentiment_weather_correlation.py",
     "src/analysis/plot_results.py",
     "src/analysis/plot_volume_results.py",
     "src/analysis/plot_reliability_summary.py"
