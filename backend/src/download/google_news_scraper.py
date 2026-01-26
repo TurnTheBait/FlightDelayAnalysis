@@ -141,7 +141,7 @@ def process_airport(row, keywords_dict, current_idx, total_count):
             if shutdown_event.is_set():
                 break
 
-            query = f"{city_name} {phrase}"
+            query = f"{city_name} {phrase} after:2015-01-01"
             encoded_query = urllib.parse.quote(query)
             
             rss_url = f"https://news.google.com/rss/search?q={encoded_query}&hl={hl}&gl={gl}&ceid={ceid}"

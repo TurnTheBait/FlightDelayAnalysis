@@ -136,7 +136,7 @@ def process_airport(row, keywords_dict):
             
     with tqdm(total=len(all_phrases), desc=f"[{code}]", leave=False, disable=True) as pbar:
         for category, phrase in all_phrases:
-            query = f"{city_name} {phrase}"
+            query = f"{city_name} {phrase} after:2015-01-01"
             encoded_query = urllib.parse.quote(query)
             
             rss_url = f"https://news.google.com/rss/search?q={encoded_query}&hl={hl}&gl={gl}&ceid={ceid}"

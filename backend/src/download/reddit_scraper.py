@@ -1,5 +1,6 @@
 import pandas as pd
 import time
+import json
 import os
 import random
 import requests
@@ -11,6 +12,7 @@ backend_dir = os.path.dirname(src_dir)
 
 AIRPORTS_CSV_PATH = os.path.join(backend_dir, 'data', 'processed', 'airports', 'airports_filtered.csv')
 OUTPUT_PATH = os.path.join(backend_dir, 'data', 'sentiment', 'reddit_raw.csv')
+KEYWORDS_PATH = os.path.join(backend_dir, 'config', 'keywords.json')
 
 USER_AGENTS = [
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -20,7 +22,22 @@ USER_AGENTS = [
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0'
 ]
 
-must_have_keywords = ['delay', 'cancelled', 'stuck', 'chaos', 'wait', 'queue', 'missed connection', 'luggage', 'baggage', 'airline', 'airport', 'flight', 'stranded']
+must_have_keywords = []
+
+if os.path.exists(KEYWORDS_PATH):
+    try:
+        with open(KEYWORDS_PATH, 'r', encoding='utf-8') as f:
+            keywords_data = json.load(f)
+            for lang in keywords_data:
+                if 'delays' in keywords_data[lang]:
+                    must_have_keywords.extend(keywords_data[lang]['delays'])
+            must_have_keywords = list(set(must_have_keywords))
+            print(f"Loaded {len(must_have_keywords)} keywords from {KEYWORDS_PATH}")
+    except Exception as e:
+        print(f"Error loading keywords from config: {e}. Using default list.")
+
+if not must_have_keywords:
+    must_have_keywords = ['delay', 'cancelled', 'stuck', 'chaos', 'wait', 'queue', 'missed connection', 'luggage', 'baggage', 'airline', 'airport', 'flight', 'stranded']
 spam_keywords = [
     'pre-order', 'fiction', 'chapter', 'author', 'book', 'novel', 'coin', 'numismatic', 'microbiome', 'diabetes', 
     'university', 'tcg', 'card game', 'movie', 'film', 'oscar', 
@@ -83,7 +100,7 @@ for index, row in df_airports.iterrows():
     for query in queries:
         print(f"[{index+1}/{len(df_airports)}] {code} - Searching: '{query}'")
         
-        url = f"https://www.reddit.com/search.json?q={query}&sort=relevance&t=year&limit=10" 
+        url = f"https://www.reddit.com/search.json?q={query}&sort=relevance&t=all&limit=25" 
         data = fetch_reddit_url(url)
         
         if data and 'data' in data and 'children' in data['data']:
@@ -114,6 +131,9 @@ for index, row in df_airports.iterrows():
                 
                 created_utc = post_data.get('created_utc')
                 date_str = datetime.utcfromtimestamp(created_utc).strftime('%Y-%m-%d %H:%M:%S')
+                
+                if date_str < '2015-01-01':
+                    continue
 
                 results_list.append({
                     "airport_code": code,

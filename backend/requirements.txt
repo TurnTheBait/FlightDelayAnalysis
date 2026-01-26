@@ -10,7 +10,6 @@ numpy
 timezonefinder
 pytz
 feedparser
-ntscraper
 torch
 transformers
 scipy
@@ -18,3 +17,5 @@ seaborn
 beautifulsoup4
 lxml
 cloudscraper
+fuzzywuzzy
+python-Levenshtein

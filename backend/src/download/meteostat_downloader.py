@@ -49,8 +49,8 @@ def main():
 
     airports = load_european_large_airports()
 
-    start = datetime(2024, 7, 1, 00, 00)
-    end = datetime(2024, 12, 31, 23, 59)
+    start = datetime(2015, 1, 1, 00, 00)
+    end = datetime.now()
 
     for _, row in airports.iterrows():
         name = row["name"]

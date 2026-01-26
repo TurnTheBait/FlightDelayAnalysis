@@ -96,8 +96,8 @@ def main():
     if 'published' in df.columns:
         df['published_dt'] = pd.to_datetime(df['published'], errors='coerce', utc=True)
         
-        df = df[df['published_dt'].dt.year >= 2022]
-        print(f"Articles after date filter (>= 2022): {len(df)}")
+        df = df[df['published_dt'].dt.year >= 2015]
+        print(f"Articles after date filter (>= 2015): {len(df)}")
     else:
         print("Warning: 'published' column not found, skipping date filter.")
 
@@ -110,7 +110,7 @@ def main():
 
     removed_count = initial_count - len(df_filtered)
     
-    print(f"Removed total of {removed_count} articles (Date < 2022 OR Irrelevant Context/False Positives).")
+    print(f"Removed total of {removed_count} articles (Date < 2015 OR Irrelevant Context/False Positives).")
     print(f"Final valid aviation articles: {len(df_filtered)}")
 
     os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)

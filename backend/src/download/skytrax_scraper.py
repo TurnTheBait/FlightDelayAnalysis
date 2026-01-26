@@ -13,7 +13,7 @@ backend_dir = os.path.dirname(src_dir)
 AIRPORTS_CSV_PATH = os.path.join(backend_dir, 'data', 'processed', 'airports', 'airports_filtered.csv')
 OUTPUT_PATH = os.path.join(backend_dir, 'data', 'sentiment', 'skytrax_raw.csv')
 
-ACCEPTED_YEARS = [2022, 2023, 2024, 2025, 2026]
+ACCEPTED_YEARS = list(range(2015, 2027))
 MIN_YEAR = min(ACCEPTED_YEARS)
 
 headers = {
