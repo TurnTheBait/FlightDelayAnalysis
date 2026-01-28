@@ -19,3 +19,4 @@ lxml
 cloudscraper
 fuzzywuzzy
 python-Levenshtein
+folium
