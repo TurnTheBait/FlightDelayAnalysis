@@ -29,18 +29,6 @@ def main():
         return
     
     df_flights = pd.read_csv(DELAYS_DATA_PATH, usecols=['SchedDepApt', 'SchedArrApt'], low_memory=False)
-    
-    AIRPORTS_PATH = os.path.join(backend_dir, 'data', 'processed', 'airports', 'airports_filtered.csv')
-    if os.path.exists(AIRPORTS_PATH):
-        print(f"Loading airport mapping from: {AIRPORTS_PATH}")
-        df_airports = pd.read_csv(AIRPORTS_PATH)
-        
-        iata_to_ident = dict(zip(df_airports['iata_code'], df_airports['ident']))
-        
-        df_flights['SchedDepApt'] = df_flights['SchedDepApt'].map(iata_to_ident).fillna(df_flights['SchedDepApt'])
-        df_flights['SchedArrApt'] = df_flights['SchedArrApt'].map(iata_to_ident).fillna(df_flights['SchedArrApt'])
-    else:
-         print(f"WARNING: Airports file not found at {AIRPORTS_PATH}. Assuming flight data uses same codes as sentiment data.")
 
     print("Calculating flight volumes...")
     dep_counts = df_flights['SchedDepApt'].value_counts()

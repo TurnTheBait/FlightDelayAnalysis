@@ -5,10 +5,16 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import numpy as np
 
 current_script_dir = os.path.dirname(os.path.abspath(__file__))
-backend_dir = os.path.dirname(os.path.dirname(current_script_dir))
+src_dir = os.path.dirname(current_script_dir)
+import sys 
+backend_dir = os.path.dirname(src_dir)
 
 INPUT_FILE = os.path.join(backend_dir, 'data', 'sentiment', 'combined_data.csv')
 OUTPUT_FILE = os.path.join(backend_dir, 'data', 'sentiment', 'sentiment_scored.csv')
+
+sys.path.append(src_dir)
+from utils.airport_utils import get_icao_to_iata_mapping
+AIRPORTS_PATH = os.path.join(backend_dir, 'data', 'processed', 'airports', 'airports_filtered.csv')
 
 model_name = "nlptown/bert-base-multilingual-uncased-sentiment"
 
@@ -70,6 +76,13 @@ df['stars_score'] = [res[1] for res in results]
 
 print("Calculating time weights...")
 df['time_weight'] = df['date'].apply(calculate_time_weight)
+
+if os.path.exists(AIRPORTS_PATH):
+    print("Mapping ICAO to IATA...")
+    icao_to_iata = get_icao_to_iata_mapping(AIRPORTS_PATH)
+    df['airport_code'] = df['airport_code'].map(icao_to_iata).fillna(df['airport_code'])
+else:
+    print(f"Warning: Airports file not found at {AIRPORTS_PATH}, skipping mapping.")
 
 os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
 df.to_csv(OUTPUT_FILE, index=False)

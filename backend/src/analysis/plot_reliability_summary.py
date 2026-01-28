@@ -33,7 +33,7 @@ scatter = sns.scatterplot(
     size="total_mentions",
     sizes=(50, 600),
     hue="global_sentiment",
-    palette="RdYlGn",  # Rosso -> Giallo -> Verde
+    palette="RdYlGn",  
     alpha=0.8,
     edgecolor="black",
     linewidth=0.5,
@@ -47,7 +47,7 @@ scatter = sns.scatterplot(
     size="total_mentions",
     sizes=(50, 600),
     hue="global_sentiment",
-    palette="RdYlGn",  # Rosso -> Giallo -> Verde
+    palette="RdYlGn",  
     alpha=0.8,
     edgecolor="black",
     linewidth=0.5,
@@ -64,7 +64,7 @@ for i, row in df.iterrows():
     
     if is_high_volume or is_extreme_score:
         plt.text(
-            row['total_mentions'] + (df['total_mentions'].max() * 0.01), # Leggero offset a destra
+            row['total_mentions'] + (df['total_mentions'].max() * 0.01), 
             row['global_sentiment'], 
             row['airport_code'], 
             fontsize=9, 

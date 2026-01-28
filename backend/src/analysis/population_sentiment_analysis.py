@@ -2,7 +2,9 @@ import pandas as pd
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
+import seaborn as sns
 from fuzzywuzzy import process
+import sys
 
 CURRENT_FILE = os.path.abspath(__file__)
 ANALYSIS_DIR = os.path.dirname(CURRENT_FILE)
@@ -12,6 +14,9 @@ BACKEND_DIR = os.path.dirname(SRC_DIR)
 AIRPORTS_CSV_PATH = os.path.join(BACKEND_DIR, 'data', 'processed', 'airports', 'airports_filtered.csv')
 SENTIMENT_CSV_PATH = os.path.join(BACKEND_DIR, 'data', 'sentiment', 'sentiment_scored.csv')
 POPULATION_CSV_PATH = os.path.join(BACKEND_DIR, 'data', 'processed', 'population', 'city_population.csv')
+
+sys.path.append(SRC_DIR)
+from utils.airport_utils import get_icao_to_iata_mapping
 FIGURES_RESULTS_DIR = os.path.join(BACKEND_DIR, 'results', 'figures', 'population_analysis')
 TABLES_RESULTS_DIR = os.path.join(BACKEND_DIR, 'results', 'tables', 'population_analysis')
 
@@ -105,6 +110,9 @@ def main():
         return
 
     df_mapped_pop = pd.merge(df_mapping, df_population, left_on='matched_city', right_on='city_name', how='left')
+
+    icao_to_iata = get_icao_to_iata_mapping(AIRPORTS_CSV_PATH)
+    df_mapped_pop['airport_code'] = df_mapped_pop['airport_code'].map(icao_to_iata).fillna(df_mapped_pop['airport_code'])
     
     df_final = pd.merge(df_mapped_pop, df_sent_agg, on='airport_code', how='inner')
     

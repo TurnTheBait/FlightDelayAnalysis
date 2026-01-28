@@ -29,7 +29,8 @@ def download_data():
             
             with gzip.open(RAW_GZ_PATH, 'rb') as f_in:
                 with open(RAW_FILE_PATH, 'wb') as f_out:
-                    shutil.copyfileobj(f_in, f_out)
+                    shutil.copyfileobj(f_in, f_out)    
+            os.remove(RAW_GZ_PATH)
             print("Decompression complete.")
         else:
             print(f"Failed to download data. Status code: {response.status_code}")

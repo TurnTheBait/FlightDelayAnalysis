@@ -14,6 +14,7 @@ OUTPUT_CSV = os.path.join(backend_dir, 'results', 'tables', 'airport_analysis_su
 
 sys.path.append(src_dir)
 from utils.metrics import calculate_weighted_average
+from utils.airport_utils import get_icao_to_iata_mapping
 
 def main():
     if not os.path.exists(SCORED_DATA_PATH):
@@ -37,8 +38,12 @@ def main():
     pivot_stats = stats.pivot(index='airport_code', columns='source', values=['count', 'avg_score'])
     pivot_stats.columns = [f"{str(col[1]).lower()}_{col[0]}" for col in pivot_stats.columns]
     pivot_stats = pivot_stats.reset_index()
-    summary = df_airports[['ident', 'name', 'iso_country', 'municipality']].copy()
-    summary = summary.rename(columns={'ident': 'airport_code'})
+    pivot_stats = pivot_stats.reset_index()
+
+    icao_to_iata = get_icao_to_iata_mapping(AIRPORTS_PATH)
+    df_airports['airport_code'] = df_airports['ident'].map(icao_to_iata).fillna(df_airports['ident'])
+    
+    summary = df_airports[['airport_code', 'name', 'iso_country', 'municipality']].copy()
 
     summary = summary.merge(pivot_stats, on='airport_code', how='left')
 

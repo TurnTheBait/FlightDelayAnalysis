@@ -65,7 +65,6 @@ def analyze_delays():
         print(f"Error saving CSV: {e}")
         return
 
-    # Analysis
     print("\n--- Quick Data Analysis (Filtered European Flights) ---")
 
     total_flights = len(filtered_df)

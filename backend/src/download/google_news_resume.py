@@ -212,7 +212,6 @@ def main():
             try:
                 data = future.result()
                 
-                # Append immediately to CSV to save progress
                 if data:
                     df_chunk = pd.DataFrame(data)
                     file_exists = os.path.isfile(OUTPUT_PATH) and os.path.getsize(OUTPUT_PATH) > 0

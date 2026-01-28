@@ -8,6 +8,9 @@ import sys
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from utils.metrics import calculate_weighted_average
+from utils.airport_utils import get_icao_to_iata_mapping
+
+AIRPORTS_PATH = os.path.join(Path(__file__).resolve().parent.parent.parent, "data", "processed", "airports", "airports_filtered.csv")
 
 
 def load_data(flights_path, sentiment_path):
@@ -39,8 +42,12 @@ def aggregate_data(df_flights, df_sentiment):
         'Dep_temp': 'mean'
     }
     
+    
     flights_agg = df_flights.groupby('DepICAO').agg(metrics).reset_index()
     flights_agg = flights_agg.rename(columns={'DepICAO': 'airport_code'})
+
+    icao_to_iata = get_icao_to_iata_mapping(AIRPORTS_PATH)
+    flights_agg['airport_code'] = flights_agg['airport_code'].map(icao_to_iata).fillna(flights_agg['airport_code'])
     
     return sentiment_agg, flights_agg
 

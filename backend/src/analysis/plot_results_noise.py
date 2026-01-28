@@ -7,6 +7,12 @@ import matplotlib as mpl
 current_script_dir = os.path.dirname(os.path.abspath(__file__))
 backend_dir = os.path.dirname(os.path.dirname(current_script_dir))
 INPUT_FILE = os.path.join(backend_dir, 'data', 'sentiment', 'sentiment_scored_noise.csv')
+AIRPORTS_PATH = os.path.join(backend_dir, 'data', 'processed', 'airports', 'airports_filtered.csv')
+
+src_dir = os.path.dirname(current_script_dir)
+import sys
+sys.path.append(src_dir)
+from utils.airport_utils import get_icao_to_iata_mapping
 
 OUTPUT_DIR_FIG = os.path.join(backend_dir, 'results', 'figures', 'noise')
 OUTPUT_DIR_TAB = os.path.join(backend_dir, 'results', 'tables', 'noise')
