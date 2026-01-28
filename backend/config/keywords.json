@@ -1,62 +1,204 @@
 {
   "EN": {
     "delays": [
-      "delay", "cancelled", "stuck at airport", "waiting for hours", "missed connection", 
-      "flight chaos", "nightmare", "strike", "grounded", "technical issue", 
-      "baggage claim", "lost luggage", "security queue", "compensation", "overbooking"
+      "delay",
+      "late",
+      "delayed",
+      "wait",
+      "hour",
+      "stuck",
+      "tarmac",
+      "missed connection",
+      "cancellation",
+      "cancelled",
+      "flight chaos",
+      "nightmare",
+      "strike",
+      "grounded",
+      "technical issue",
+      "baggage claim",
+      "lost luggage",
+      "security queue",
+      "compensation",
+      "overbooking"
     ],
     "noise": [
-      "noise", "loud aircraft", "flight path", "sleepless", "woke me up", 
-      "low flying", "noise pollution", "decibels", "earplugs", "curfew", 
-      "runway expansion", "vibration", "residents protest"
+      "noise",
+      "loud",
+      "sound",
+      "decibel",
+      "runway",
+      "airplane noise",
+      "flight path",
+      "sleepless",
+      "woke me up",
+      "low flying",
+      "noise pollution",
+      "curfew",
+      "vibration",
+      "residents protest"
     ]
   },
   "IT": {
     "delays": [
-      "ritardo", "cancellato", "bloccato in aeroporto", "attesa infinita", "coincidenza persa", 
-      "caos voli", "disastro", "sciopero", "a terra", "guasto tecnico", 
-      "bagagli smarriti", "code controlli", "rimborso", "overbooking", "disagi"
+      "ritardo",
+      "cancellato",
+      "bloccato in aeroporto",
+      "attesa infinita",
+      "coincidenza persa",
+      "caos voli",
+      "disastro",
+      "sciopero",
+      "a terra",
+      "guasto tecnico",
+      "bagagli smarriti",
+      "code controlli",
+      "rimborso",
+      "overbooking",
+      "disagi"
     ],
     "noise": [
-      "rumore aerei", "aerei bassi", "non si dorme", "inquinamento acustico", "rombo", 
-      "troppo casino", "rotte aeree", "decibel", "vibrazioni", "coprifuoco", 
-      "protesta residenti", "insonorizzazione", "sorvolo"
+      "rumore",
+      "rumore aerei",
+      "aerei bassi",
+      "non si dorme",
+      "inquinamento acustico",
+      "rombo",
+      "troppo casino",
+      "rotte aeree",
+      "decibel",
+      "vibrazioni",
+      "coprifuoco",
+      "protesta residenti",
+      "insonorizzazione",
+      "sorvolo"
     ]
   },
   "DE": {
     "delays": [
-      "verspätung", "annulliert", "flugausfall", "warten", "anschluss verpasst", 
-      "chaos", "stundenlang", "streik", "gestrichen", "technischer defekt", 
-      "koffer weg", "schlange", "entschädigung", "bodenpersonal", "wartezeit"
+      "verspätung",
+      "annulliert",
+      "flugausfall",
+      "warten",
+      "anschluss verpasst",
+      "chaos",
+      "stundenlang",
+      "streik",
+      "gestrichen",
+      "technischer defekt",
+      "koffer weg",
+      "schlange",
+      "entschädigung",
+      "bodenpersonal",
+      "wartezeit"
     ],
     "noise": [
-      "fluglärm", "lärmbelästigung", "zu laut", "nachtflugverbot", "schlaflos", 
-      "einflugschneise", "donnern", "schallschutz", "bürgerinitiative", "nachtruhe", 
-      "tieflog", "dezibel", "flugroute"
+      "lärm",
+      "fluglärm",
+      "lärmbelästigung",
+      "zu laut",
+      "nachtflugverbot",
+      "schlaflos",
+      "einflugschneise",
+      "donnern",
+      "schallschutz",
+      "bürgerinitiative",
+      "nachtruhe",
+      "tieflog",
+      "dezibel",
+      "flugroute"
     ]
   },
   "FR": {
     "delays": [
-      "retard", "annulé", "bloqué", "attente interminable", "correspondance ratée", 
-      "galère", "vols annulés", "grève", "panne", "cloué au sol", 
-      "bagages perdus", "file d'attente", "indemnisation", "pagaille", "perturbations"
+      "retard",
+      "annulé",
+      "bloqué",
+      "attente interminable",
+      "correspondance ratée",
+      "galère",
+      "vols annulés",
+      "grève",
+      "panne",
+      "cloué au sol",
+      "bagages perdus",
+      "file d'attente",
+      "indemnisation",
+      "pagaille",
+      "perturbations"
     ],
     "noise": [
-      "bruit avions", "nuisances sonores", "réveillé", "couloir aérien", "trop bruyant", 
-      "survol", "vacarme", "couvre-feu", "décibels", "riverains en colère", 
-      "isolation phonique", "ras-le-bol", "trajectoires"
+      "bruit",
+      "bruit avions",
+      "nuisances sonores",
+      "réveillé",
+      "couloir aérien",
+      "trop bruyant",
+      "survol",
+      "vacarme",
+      "couvre-feu",
+      "décibels",
+      "riverains en colère",
+      "isolation phonique",
+      "ras-le-bol",
+      "trajectoires"
     ]
   },
   "ES": {
     "delays": [
-      "retraso", "cancelado", "atrapado", "espera larga", "perdido vuelo", 
-      "caos aéreo", "vergüenza", "huelga", "avería", "en tierra", 
-      "equipaje perdido", "colas", "reclamación", "overbooking", "incidencia"
+      "retraso",
+      "cancelado",
+      "atrapado",
+      "espera larga",
+      "perdido vuelo",
+      "caos aéreo",
+      "vergüenza",
+      "huelga",
+      "avería",
+      "en tierra",
+      "equipaje perdido",
+      "colas",
+      "reclamación",
+      "overbooking",
+      "incidencia"
     ],
     "noise": [
-      "ruido aviones", "contaminación acústica", "no puedo dormir", "aviones bajos", "estruendo", 
-      "ruta de vuelo", "decibelios", "quejas vecinos", "toque de queda", "vibraciones", 
-      "aislamiento", "sobrevuelo", "impacto acústico"
+      "ruido",
+      "ruido aviones",
+      "contaminación acústica",
+      "no puedo dormir",
+      "aviones bajos",
+      "estruendo",
+      "ruta de vuelo",
+      "decibelios",
+      "quejas vecinos",
+      "toque de queda",
+      "vibraciones",
+      "aislamiento",
+      "sobrevuelo",
+      "impacto acústico"
+    ]
+  },
+  "FI": {
+    "delays": [
+      "myöhässä",
+      "viivästynyt",
+      "peruttu",
+      "odottaa",
+      "tuntia",
+      "jumissa",
+      "kentällä",
+      "jatkolento",
+      "lakko"
+    ],
+    "noise": [
+      "melu",
+      "lentokone",
+      "ääni",
+      "desibeli",
+      "kiitotie",
+      "lentomelu",
+      "lentoreitti"
     ]
   }
 }

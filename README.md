@@ -1,9 +1,6 @@
-# Flight Delay Analysis and Prediction Using Weather Data
+# AI enabled web-based sentiment analysis of airports negative externalities
 
-This repository contains the software project developed for the Master’s Thesis in Computer Engineering.
-
-The goal of the project is to build a system capable of collecting, analyzing, and cross-referencing flight status data with weather data.
-The final objective is to study the correlation between weather conditions and flight delays, ultimately creating a predictive model.
+The project aims to develop a system for monitoring and analyzing airport negative externalities, with a specific focus on passenger perception of **flight delays** and **noise pollution**. Utilizing AI-driven sentiment analysis on multi-source, multi-language data, the system quantifies public perception and cross-references it with operational flight data to provide actionable insights into airport performance and environmental impact.
 
 ---
 
