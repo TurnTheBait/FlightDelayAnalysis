@@ -41,7 +41,7 @@ def main():
 
     plt.subplot(1, 2, 1)
     colors_top = get_colors(top_airports['mean'])
-    sns.barplot(x='mean', y='airport_code', data=top_airports, palette=colors_top, edgecolor='black')
+    sns.barplot(x='mean', y='airport_code', hue='airport_code', data=top_airports, palette=colors_top, edgecolor='black', legend=False)
     plt.title(f'Top {top_n} Airports by Sentiment', fontsize=14, weight='bold')
     plt.xlabel('Average Score (0-10)')
     plt.ylabel('')
@@ -53,7 +53,7 @@ def main():
 
     plt.subplot(1, 2, 2)
     colors_bottom = get_colors(bottom_airports['mean'])
-    sns.barplot(x='mean', y='airport_code', data=bottom_airports, palette=colors_bottom, edgecolor='black')
+    sns.barplot(x='mean', y='airport_code', hue='airport_code', data=bottom_airports, palette=colors_bottom, edgecolor='black', legend=False)
     plt.title(f'Bottom {top_n} Airports by Sentiment', fontsize=14, weight='bold')
     plt.xlabel('Average Score (0-10)')
     plt.ylabel('')
@@ -125,7 +125,7 @@ def main():
 
     colors_agg = get_colors(aggregated_scores['rounded_score'])
 
-    ax_agg = sns.barplot(x='rounded_score', y='airport_code', data=aggregated_scores, palette=colors_agg, edgecolor='black')
+    ax_agg = sns.barplot(x='rounded_score', y='airport_code', hue='airport_code', data=aggregated_scores, palette=colors_agg, edgecolor='black', legend=False)
 
     plt.title('Aggregated Sentiment Ranking (Grouped by Score)', fontsize=16, weight='bold')
     plt.xlabel('Sentiment Score (0-10)', fontsize=12)

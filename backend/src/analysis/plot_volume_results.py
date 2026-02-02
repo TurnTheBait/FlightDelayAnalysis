@@ -43,7 +43,7 @@ def main():
     plt.subplot(1, 2, 1)
 
     colors_top = get_colors(top_airports['composite_score_scaled'])
-    sns.barplot(x='composite_score_scaled', y='airport_code', data=top_airports, palette=colors_top, edgecolor='black')
+    sns.barplot(x='composite_score_scaled', y='airport_code', hue='airport_code', data=top_airports, palette=colors_top, edgecolor='black', legend=False)
     plt.title(f'Top {top_n} Airports by Composite Score\n(Volume + Sentiment)', fontsize=14, weight='bold')
     plt.xlabel('Composite Score (0-10)')
     plt.ylabel('Airport Code')
@@ -55,7 +55,7 @@ def main():
 
     plt.subplot(1, 2, 2)
     colors_bottom = get_colors(bottom_airports['composite_score_scaled'])
-    sns.barplot(x='composite_score_scaled', y='airport_code', data=bottom_airports, palette=colors_bottom, edgecolor='black')
+    sns.barplot(x='composite_score_scaled', y='airport_code', hue='airport_code', data=bottom_airports, palette=colors_bottom, edgecolor='black', legend=False)
     plt.title(f'Bottom {top_n} Airports by Composite Score', fontsize=14, weight='bold')
     plt.xlabel('Composite Score (0-10)')
     plt.ylabel('')
@@ -135,7 +135,7 @@ def main():
     
     colors_agg = [cmap_score(norm_score(v)) for v in aggregated_wa['rounded_score']]
     
-    ax_agg = sns.barplot(x='rounded_score', y='airport_code', data=aggregated_wa, palette=colors_agg, edgecolor='black')
+    ax_agg = sns.barplot(x='rounded_score', y='airport_code', hue='airport_code', data=aggregated_wa, palette=colors_agg, edgecolor='black', legend=False)
     
     plt.title('Aggregated Composite Ranking (Sentiment + Volume)', fontsize=16, weight='bold')
     plt.xlabel('Composite Score (0-10)', fontsize=12)
