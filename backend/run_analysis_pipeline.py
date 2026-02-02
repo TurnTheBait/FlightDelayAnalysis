@@ -9,8 +9,6 @@ scripts = [
     "src/preprocess/clean_news.py",
     "src/preprocess/combine_data.py",
     "src/analysis/sentiment_analysis.py",
-    "src/analysis/sentiment_analysis_delay.py",
-    "src/analysis/sentiment_analysis_noise.py",
     "src/analysis/summary.py",
     "src/analysis/flight_volume_analysis.py",
     "src/analysis/merge_weather_data.py",

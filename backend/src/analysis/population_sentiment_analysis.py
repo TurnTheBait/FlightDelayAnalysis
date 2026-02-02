@@ -2,9 +2,9 @@ import pandas as pd
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
-import seaborn as sns
 from fuzzywuzzy import process
 import sys
+import numpy as np
 
 CURRENT_FILE = os.path.abspath(__file__)
 ANALYSIS_DIR = os.path.dirname(CURRENT_FILE)
@@ -12,11 +12,12 @@ SRC_DIR = os.path.dirname(ANALYSIS_DIR)
 BACKEND_DIR = os.path.dirname(SRC_DIR)
 
 AIRPORTS_CSV_PATH = os.path.join(BACKEND_DIR, 'data', 'processed', 'airports', 'airports_filtered.csv')
-SENTIMENT_CSV_PATH = os.path.join(BACKEND_DIR, 'data', 'sentiment', 'sentiment_scored.csv')
+SENTIMENT_CSV_PATH = os.path.join(BACKEND_DIR, 'data', 'sentiment', 'sentiment_results_noise.csv')
 POPULATION_CSV_PATH = os.path.join(BACKEND_DIR, 'data', 'processed', 'population', 'city_population.csv')
 
 sys.path.append(SRC_DIR)
 from utils.airport_utils import get_icao_to_iata_mapping
+
 FIGURES_RESULTS_DIR = os.path.join(BACKEND_DIR, 'results', 'figures', 'population_analysis')
 TABLES_RESULTS_DIR = os.path.join(BACKEND_DIR, 'results', 'tables', 'population_analysis')
 
@@ -36,9 +37,7 @@ def load_data():
 
 def match_cities(df_airports, df_population):
     print("Matching airports to cities based on population data...")
-    
     mapping = []
-    
     pop_cities = df_population['city_name'].unique().tolist()
     
     for idx, row in df_airports.iterrows():
@@ -74,7 +73,6 @@ def match_cities(df_airports, df_population):
 
 def analyze_correlation(df_merged):
     print("\nAnalyzing correlations...")
-    
     corr = df_merged[['population', 'avg_sentiment']].corr()
     print("Correlation Matrix:")
     print(corr)
@@ -87,12 +85,12 @@ def analyze_correlation(df_merged):
              plt.text(row['population'], row['avg_sentiment'], row['airport_code'], fontsize=9, alpha=0.7)
 
     plt.xscale('log')
-    plt.title(f'Airport Sentiment vs City Population (Log Scale)\nCorrelation: {corr.iloc[0,1]:.2f}')
+    plt.title(f'Airport Noise Sentiment vs City Population (Log Scale)\nCorrelation: {corr.iloc[0,1]:.2f}')
     plt.xlabel('City Population (Log Scale)')
-    plt.ylabel('Average Sentiment Score')
+    plt.ylabel('Average Noise Sentiment Score')
     plt.grid(True, which="both", ls="-", alpha=0.2)
     
-    output_path = os.path.join(FIGURES_RESULTS_DIR, 'sentiment_vs_population.png')
+    output_path = os.path.join(FIGURES_RESULTS_DIR, 'sentiment_noise_vs_population.png')
     plt.savefig(output_path)
     print(f"Saved scatter plot to {output_path}")
 
@@ -100,8 +98,10 @@ def main():
     df_airports, df_sentiment, df_population = load_data()
     if df_airports is None: return
     
-    df_sent_agg = df_sentiment.groupby('airport_code')['stars_score'].mean().reset_index()
-    df_sent_agg.rename(columns={'stars_score': 'avg_sentiment'}, inplace=True)
+    # Aggregazione basata sui pesi corretti (weighted_score)
+    df_sent_agg = df_sentiment.groupby('airport_code').apply(
+        lambda x: np.average(x['stars_score'], weights=x['time_weight'])
+    ).reset_index(name='avg_sentiment')
     
     df_mapping = match_cities(df_airports, df_population)
     
@@ -117,9 +117,8 @@ def main():
     df_final = pd.merge(df_mapped_pop, df_sent_agg, on='airport_code', how='inner')
     
     print(f"Final dataset for analysis: {len(df_final)} airports.")
-    print(df_final[['airport_code', 'matched_city', 'population', 'avg_sentiment']].head(10))
     
-    df_final.to_csv(os.path.join(TABLES_RESULTS_DIR, 'population_sentiment_merged.csv'), index=False)
+    df_final.to_csv(os.path.join(TABLES_RESULTS_DIR, 'population_sentiment_noise_merged.csv'), index=False)
     
     analyze_correlation(df_final)
 

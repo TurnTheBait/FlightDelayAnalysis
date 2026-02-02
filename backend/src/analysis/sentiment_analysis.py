@@ -1,29 +1,63 @@
 import pandas as pd
 import os
+import json
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import numpy as np
+from datetime import datetime
+import re
 
-current_script_dir = os.path.dirname(os.path.abspath(__file__))
-src_dir = os.path.dirname(current_script_dir)
-import sys 
-backend_dir = os.path.dirname(src_dir)
+CURRENT_FILE = os.path.abspath(__file__)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(CURRENT_FILE)))
+DATA_DIR = os.path.join(BASE_DIR, 'data')
+CONFIG_PATH = os.path.join(BASE_DIR, 'config', 'keywords.json')
+INPUT_FILE = os.path.join(DATA_DIR, 'sentiment', 'combined_data.csv')
+AIRPORTS_PATH = os.path.join(DATA_DIR, 'processed', 'airports', 'airports_filtered.csv')
+FLIGHTS_DATA_PATH = os.path.join(DATA_DIR, 'processed', 'delays', 'delays_consolidated_filtered.csv')
 
-INPUT_FILE = os.path.join(backend_dir, 'data', 'sentiment', 'combined_data.csv')
-OUTPUT_FILE = os.path.join(backend_dir, 'data', 'sentiment', 'sentiment_scored.csv')
+MODEL_NAME = "nlptown/bert-base-multilingual-uncased-sentiment"
 
-sys.path.append(src_dir)
-from utils.airport_utils import get_icao_to_iata_mapping
-AIRPORTS_PATH = os.path.join(backend_dir, 'data', 'processed', 'airports', 'airports_filtered.csv')
+print(f"Loading Model: {MODEL_NAME}")
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME)
 
-model_name = "nlptown/bert-base-multilingual-uncased-sentiment"
+def get_icao_to_iata_mapping(csv_path):
+    if not os.path.exists(csv_path):
+        return {}
+    df = pd.read_csv(csv_path)
+    mapping = dict(zip(df['icao_code'], df['iata_code']))
+    return mapping
 
-print(f"Loading AI model ({model_name})...")
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSequenceClassification.from_pretrained(model_name)
-print("Model loaded.")
+def get_dynamic_strategic_hubs(flights_path, airports_path, top_n=30):
+    print(f"Calculating Strategic Hubs dynamically from: {flights_path}")
+    
+    if not os.path.exists(flights_path):
+        print("[WARNING] Flights data not found. Falling back to empty hub list.")
+        return []
 
-def calculate_sentiment(text):
+    try:
+        cols_to_use = ['SchedDepApt', 'SchedArrApt']
+        df_flights = pd.read_csv(flights_path, usecols=cols_to_use)
+        
+        dep_counts = df_flights['SchedDepApt'].value_counts()
+        arr_counts = df_flights['SchedArrApt'].value_counts()
+        
+        total_movements = dep_counts.add(arr_counts, fill_value=0)
+        
+        top_iata_list = total_movements.sort_values(ascending=False).head(top_n).index.tolist()
+        
+        top_iata_list = [str(x).strip().upper() for x in top_iata_list if pd.notna(x)]
+        
+        print(f"Identified {len(top_iata_list)} Strategic Hubs (Based on Total Movements).")
+        print(f"Top 5 Hubs: {top_iata_list[:5]}")
+        
+        return top_iata_list
+
+    except Exception as e:
+        print(f"[ERROR] Error calculating dynamic hubs: {e}")
+        return []
+
+def calculate_bert_sentiment(text):
     if not text or pd.isna(text):
         return 0, 3
     
@@ -32,9 +66,7 @@ def calculate_sentiment(text):
         outputs = model(**inputs)
     
     probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
-
     probs_np = probs.cpu().numpy()[0]
-    
     stars = sum((i + 1) * p for i, p in enumerate(probs_np))
     
     if stars <= 2.4: polarity = -1
@@ -43,49 +75,97 @@ def calculate_sentiment(text):
     
     return polarity, stars
 
-if not os.path.exists(INPUT_FILE):
-    print(f"Error: File not found {INPUT_FILE}")
-    exit()
-
-print(f"Reading data from: {INPUT_FILE}")
-df = pd.read_csv(INPUT_FILE)
-
-print("Starting sentiment analysis...")
-from datetime import datetime
-import pytz
-
-CURRENT_DATE = datetime(2026, 1, 1, tzinfo=pytz.UTC)
-
-def calculate_time_weight(date_str):
+def calculate_adaptive_weight(row_date, airport_code, strategic_hubs):
+    current_date = datetime.now()
+    
     try:
-        dt = pd.to_datetime(date_str, utc=True)
-        if pd.isna(dt):
-            return 0.5
-        
-        age_days = (CURRENT_DATE - dt).days
-        if age_days < 0: age_days = 0
-        
-        weight = 0.5 ** (age_days / 365.0)
-        return weight
+        dt = pd.to_datetime(row_date)
+        if pd.isna(dt): return 0.5
     except:
         return 0.5
 
-results = df['text'].apply(lambda x: calculate_sentiment(x))
-df['sentiment_polarity'] = [res[0] for res in results]
-df['stars_score'] = [res[1] for res in results]
+    if airport_code in strategic_hubs:
+        half_life_days = 365 * 2 
+    else:
+        half_life_days = 365 * 6 
 
-print("Calculating time weights...")
-df['time_weight'] = df['date'].apply(calculate_time_weight)
+    delta_days = (current_date - dt).days
+    if delta_days < 0: delta_days = 0
+    
+    weight = 0.5 ** (delta_days / half_life_days)
+    return weight
 
-if os.path.exists(AIRPORTS_PATH):
-    print("Mapping ICAO to IATA...")
-    icao_to_iata = get_icao_to_iata_mapping(AIRPORTS_PATH)
-    df['airport_code'] = df['airport_code'].map(icao_to_iata).fillna(df['airport_code'])
-else:
-    print(f"Warning: Airports file not found at {AIRPORTS_PATH}, skipping mapping.")
+def process_dataset(df, mode, strategic_hubs, keywords=None):
+    print(f"\n--- Processing Mode: {mode.upper()} ---")
+    
+    df_subset = df.copy()
+    
+    if keywords:
+        pattern = '|'.join(map(re.escape, keywords))
+        df_subset = df_subset[df_subset['text'].str.contains(pattern, case=False, na=False)]
+        print(f"Filtered rows (Keyword match): {len(df_subset)}")
+    else:
+        print(f"Using full dataset: {len(df_subset)}")
 
-os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
-df.to_csv(OUTPUT_FILE, index=False)
+    if df_subset.empty:
+        print("No data for this category.")
+        return
 
-print(f"Analysis complete. File saved to: {OUTPUT_FILE}")
-print(df[['city', 'text', 'stars_score']].head())
+    results = []
+    print("Calculating Sentiment & Adaptive Weights...")
+    
+    for idx, row in df_subset.iterrows():
+        pol, stars = calculate_bert_sentiment(row['text'])
+        
+        ap_code = row.get('airport_code', 'UNKNOWN')
+        weight = calculate_adaptive_weight(row['date'], ap_code, strategic_hubs)
+        
+        results.append({
+            'sentiment_polarity': pol,
+            'stars_score': stars,
+            'time_weight': weight,
+            'weighted_score': stars * weight
+        })
+
+    result_df = pd.DataFrame(results)
+    final_df = pd.concat([df_subset.reset_index(drop=True), result_df], axis=1)
+    
+    output_filename = f"sentiment_results_{mode}.csv"
+    output_path = os.path.join(DATA_DIR, 'sentiment', output_filename)
+    final_df.to_csv(output_path, index=False)
+    print(f"Saved: {output_path}")
+
+def main():
+    if not os.path.exists(INPUT_FILE):
+        print("Input file not found.")
+        return
+
+    print("Loading Data...")
+    df = pd.read_csv(INPUT_FILE)
+    
+    mapping = get_icao_to_iata_mapping(AIRPORTS_PATH)
+    if mapping:
+        df['airport_code'] = df['airport_code'].map(mapping).fillna(df['airport_code'])
+    
+    strategic_hubs_list = get_dynamic_strategic_hubs(FLIGHTS_DATA_PATH, AIRPORTS_PATH, top_n=30)
+
+    with open(CONFIG_PATH, 'r') as f:
+        kw_config = json.load(f)
+        
+    delays_kw = []
+    noise_kw = []
+    for lang in kw_config:
+        if 'delays' in kw_config[lang]: delays_kw.extend(kw_config[lang]['delays'])
+        if 'noise' in kw_config[lang]: noise_kw.extend(kw_config[lang]['noise'])
+    
+    delays_kw = list(set(delays_kw))
+    noise_kw = list(set(noise_kw))
+
+    process_dataset(df, "general", strategic_hubs_list, keywords=None)
+    
+    process_dataset(df, "delay", strategic_hubs_list, keywords=delays_kw)
+    
+    process_dataset(df, "noise", strategic_hubs_list, keywords=noise_kw)
+
+if __name__ == "__main__":
+    main()

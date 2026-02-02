@@ -6,7 +6,7 @@ import matplotlib as mpl
 
 current_script_dir = os.path.dirname(os.path.abspath(__file__))
 backend_dir = os.path.dirname(os.path.dirname(current_script_dir))
-INPUT_FILE = os.path.join(backend_dir, 'data', 'sentiment', 'sentiment_scored_delay.csv')
+INPUT_FILE = os.path.join(backend_dir, 'data', 'sentiment', 'sentiment_results_delay.csv')
 AIRPORTS_PATH = os.path.join(backend_dir, 'data', 'processed', 'airports', 'airports_filtered.csv')
 
 src_dir = os.path.dirname(current_script_dir)
@@ -34,6 +34,7 @@ def main():
     df['score_scaled'] = df['stars_score'] * 2
 
     agg_data = df.groupby('airport_code')['score_scaled'].agg(['mean', 'count']).reset_index()
+
     agg_data = agg_data.sort_values('mean', ascending=False)
     
     agg_table_path = os.path.join(OUTPUT_DIR_TAB, 'sentiment_aggregated_delay.csv')
@@ -41,48 +42,10 @@ def main():
     print(f"Aggregated table saved to: {agg_table_path}")
 
     norm = mpl.colors.Normalize(vmin=0, vmax=10)
-    cmap = mpl.cm.RdYlGn
+    cmap = mpl.cm.RdYlGn_r
     
     def get_colors(values):
         return [cmap(norm(v)) for v in values]
-
-    top_n = 15
-    top_airports = agg_data.head(top_n)
-    bottom_airports = agg_data.tail(top_n)
-    
-    top_airports.to_csv(os.path.join(OUTPUT_DIR_TAB, 'top_airports_delay.csv'), index=False)
-    bottom_airports.to_csv(os.path.join(OUTPUT_DIR_TAB, 'bottom_airports_delay.csv'), index=False)
-
-    plt.figure(figsize=(18, 10))
-
-    plt.subplot(1, 2, 1)
-    colors_top = get_colors(top_airports['mean'])
-    sns.barplot(x='mean', y='airport_code', data=top_airports, hue='mean', palette=colors_top, edgecolor='black', legend=False)
-    plt.title(f'Top {top_n} Airports by Delay Perception', fontsize=14, weight='bold')
-    plt.xlabel('Average Score (0-10)')
-    plt.ylabel('')
-    plt.xlim(0, 10.5)
-    plt.axvline(x=6, color='black', linestyle='--', linewidth=1, label='Neutral (6.0)')
-
-    for i, row in enumerate(top_airports.itertuples()):
-       plt.text(row.mean + 0.1, i, f"{row.mean:.1f}", va='center', fontsize=10, weight='bold')
-
-    plt.subplot(1, 2, 2)
-    colors_bottom = get_colors(bottom_airports['mean'])
-    sns.barplot(x='mean', y='airport_code', data=bottom_airports, hue='mean', palette=colors_bottom, edgecolor='black', legend=False)
-    plt.title(f'Bottom {top_n} Airports by Delay Perception', fontsize=14, weight='bold')
-    plt.xlabel('Average Score (0-10)')
-    plt.ylabel('')
-    plt.xlim(0, 10.5)
-    plt.axvline(x=6, color='black', linestyle='--', linewidth=1, label='Neutral (6.0)')
-
-    for i, row in enumerate(bottom_airports.itertuples()):
-       plt.text(row.mean + 0.1, i, f"{row.mean:.1f}", va='center', fontsize=10, weight='bold')
-
-    plt.tight_layout()
-    output_ranking = os.path.join(OUTPUT_DIR_FIG, 'sentiment_ranking_top_bottom_delay.png')
-    plt.savefig(output_ranking, dpi=300)
-    print(f"Ranking plot saved to: {output_ranking}")
 
     plt.figure(figsize=(10, 6))
     

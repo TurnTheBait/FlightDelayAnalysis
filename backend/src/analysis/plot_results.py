@@ -8,7 +8,7 @@ current_script_dir = os.path.dirname(os.path.abspath(__file__))
 backend_dir = os.path.dirname(os.path.dirname(current_script_dir))
 src_dir = os.path.dirname(current_script_dir)
 import sys
-INPUT_FILE = os.path.join(backend_dir, 'data', 'sentiment', 'sentiment_scored.csv')
+INPUT_FILE = os.path.join(backend_dir, 'data', 'sentiment', 'sentiment_results_general.csv')
 OUTPUT_IMG = os.path.join(backend_dir, 'results', 'figures', 'sentiment_overview.png')
 AIRPORTS_PATH = os.path.join(backend_dir, 'data', 'processed', 'airports', 'airports_filtered.csv')
 

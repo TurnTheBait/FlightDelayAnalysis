@@ -7,11 +7,9 @@ from pathlib import Path
 import sys
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from utils.metrics import calculate_weighted_average
 from utils.airport_utils import get_icao_to_iata_mapping
 
 AIRPORTS_PATH = os.path.join(Path(__file__).resolve().parent.parent.parent, "data", "processed", "airports", "airports_filtered.csv")
-
 
 def load_data(flights_path, sentiment_path):
     print(f"Loading flights data from {flights_path}...")
@@ -28,11 +26,13 @@ def aggregate_data(df_flights, df_sentiment):
     
     sentiment_agg = df_sentiment.groupby('airport_code').apply(
         lambda x: pd.Series({
-            'global_sentiment': calculate_weighted_average(x, 'stars_score', 'time_weight', scale_factor=2),
+            'global_sentiment': np.average(x['stars_score'], weights=x['time_weight']),
             'sentiment_count': len(x)
         }),
         include_groups=False
     ).reset_index()
+    
+    sentiment_agg['global_sentiment'] = sentiment_agg['global_sentiment'] * 2
     
     metrics = {
         'MinLateDeparted': 'mean',
@@ -41,7 +41,6 @@ def aggregate_data(df_flights, df_sentiment):
         'Dep_wspd': 'mean',
         'Dep_temp': 'mean'
     }
-    
     
     flights_agg = df_flights.groupby('DepICAO').agg(metrics).reset_index()
     flights_agg = flights_agg.rename(columns={'DepICAO': 'airport_code'})
@@ -66,7 +65,7 @@ def calculate_correlation(df, tables_dir):
     print(corr_matrix)
     
     os.makedirs(tables_dir, exist_ok=True)
-    corr_matrix.to_csv(os.path.join(tables_dir, 'correlation_summary.csv'))
+    corr_matrix.to_csv(os.path.join(tables_dir, 'correlation_delay_weather_summary.csv'))
     return corr_matrix
 
 def plot_results(df, output_dir):
@@ -75,32 +74,32 @@ def plot_results(df, output_dir):
     
     plt.figure(figsize=(10, 6))
     sns.regplot(x='global_sentiment', y='MinLateDeparted', data=df, scatter_kws={'alpha':0.5}, line_kws={'color':'red'})
-    plt.title('Global Sentiment vs Average Departure Delay')
-    plt.xlabel('Global Sentiment Score (1-10)')
+    plt.title('Delay Sentiment vs Average Departure Delay')
+    plt.xlabel('Delay Sentiment Score (1-10)')
     plt.ylabel('Average Departure Delay (min)')
     plt.savefig(os.path.join(output_dir, 'sentiment_vs_departure_delay.png'))
     plt.close()
     
     plt.figure(figsize=(10, 6))
     sns.regplot(x='global_sentiment', y='MinLateArrived', data=df, scatter_kws={'alpha':0.5}, line_kws={'color':'orange'})
-    plt.title('Global Sentiment vs Average Arrival Delay')
-    plt.xlabel('Global Sentiment Score (1-10)')
+    plt.title('Delay Sentiment vs Average Arrival Delay')
+    plt.xlabel('Delay Sentiment Score (1-10)')
     plt.ylabel('Average Arrival Delay (min)')
     plt.savefig(os.path.join(output_dir, 'sentiment_vs_arrival_delay.png'))
     plt.close()
     
     plt.figure(figsize=(10, 6))
     sns.regplot(x='global_sentiment', y='Dep_prcp', data=df, scatter_kws={'alpha':0.5}, line_kws={'color':'blue'})
-    plt.title('Global Sentiment vs Average Precipitation')
-    plt.xlabel('Global Sentiment Score (1-10)')
+    plt.title('Delay Sentiment vs Average Precipitation')
+    plt.xlabel('Delay Sentiment Score (1-10)')
     plt.ylabel('Average Precipitation (mm)')
     plt.savefig(os.path.join(output_dir, 'sentiment_vs_weather_prcp.png'))
     plt.close()
 
     plt.figure(figsize=(10, 6))
     sns.regplot(x='global_sentiment', y='Dep_wspd', data=df, scatter_kws={'alpha':0.5}, line_kws={'color':'green'})
-    plt.title('Global Sentiment vs Average Wind Speed')
-    plt.xlabel('Global Sentiment Score (1-10)')
+    plt.title('Delay Sentiment vs Average Wind Speed')
+    plt.xlabel('Delay Sentiment Score (1-10)')
     plt.ylabel('Average Wind Speed (km/h)')
     plt.savefig(os.path.join(output_dir, 'sentiment_vs_weather_wspd.png'))
     plt.close()
@@ -110,7 +109,8 @@ def plot_results(df, output_dir):
 def main():
     BASE_DIR = Path(__file__).resolve().parents[3]
     FLIGHTS_FILE = BASE_DIR / "backend" / "data" / "merged" / "flights_with_weather.csv"
-    SENTIMENT_FILE = BASE_DIR / "backend" / "data" / "sentiment" / "sentiment_scored.csv"
+    SENTIMENT_FILE = BASE_DIR / "backend" / "data" / "sentiment" / "sentiment_results_delay.csv"
+    
     OUTPUT_DIR = BASE_DIR / "backend" / "results" / "figures" / "sentiment_weather_correlation"
     TABLES_DIR = BASE_DIR / "backend" / "results" / "tables"
 

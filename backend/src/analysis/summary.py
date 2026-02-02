@@ -7,7 +7,7 @@ current_script_dir = os.path.dirname(os.path.abspath(__file__))
 src_dir = os.path.dirname(current_script_dir)
 backend_dir = os.path.dirname(src_dir)
 
-SCORED_DATA_PATH = os.path.join(backend_dir, 'data', 'sentiment', 'sentiment_scored.csv')
+SCORED_DATA_PATH = os.path.join(backend_dir, 'data', 'sentiment', 'sentiment_results_general.csv')
 AIRPORTS_PATH = os.path.join(backend_dir, 'data', 'processed', 'airports', 'airports_filtered.csv')
 
 OUTPUT_CSV = os.path.join(backend_dir, 'results', 'tables', 'airport_analysis_summary.csv')
