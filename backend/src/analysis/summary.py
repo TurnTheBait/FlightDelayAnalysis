@@ -7,7 +7,7 @@ current_script_dir = os.path.dirname(os.path.abspath(__file__))
 src_dir = os.path.dirname(current_script_dir)
 backend_dir = os.path.dirname(src_dir)
 
-SCORED_DATA_PATH = os.path.join(backend_dir, 'data', 'sentiment', 'sentiment_results_general.csv')
+SCORED_DATA_PATH = os.path.join(backend_dir, 'data', 'sentiment', 'sentiment_results_delay.csv')
 AIRPORTS_PATH = os.path.join(backend_dir, 'data', 'processed', 'airports', 'airports_filtered.csv')
 
 OUTPUT_CSV = os.path.join(backend_dir, 'results', 'tables', 'airport_analysis_summary.csv')
@@ -73,7 +73,7 @@ def main():
             return total_score_sum / total_weight_sum
         return np.nan
 
-    summary['global_sentiment'] = summary.apply(calculate_weighted_sentiment, axis=1)
+    summary['delay_sentiment'] = summary.apply(calculate_weighted_sentiment, axis=1)
 
     summary = summary.sort_values('total_mentions', ascending=False)
     summary = summary[summary['total_mentions'] > 0]
@@ -82,7 +82,7 @@ def main():
     summary.to_csv(OUTPUT_CSV, index=False)
     
     print(f"Analysis complete. Tabella salvata in: {OUTPUT_CSV}")
-    print(summary[['airport_code', 'iso_country', 'total_mentions', 'global_sentiment']].head())
+    print(summary[['airport_code', 'iso_country', 'total_mentions', 'delay_sentiment']].head())
 
 if __name__ == "__main__":
     main()

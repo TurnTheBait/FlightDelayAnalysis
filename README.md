@@ -17,5 +17,5 @@ This thesis project is carried out in collaboration with **flAI**.
 
 ### Supervisors
 
-- **Prof. Cattaneo Mattia**
 - **Prof. Birolini Sebastian**
+- **Prof. Avogadro Nicolò**
