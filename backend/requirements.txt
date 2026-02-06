@@ -20,3 +20,5 @@ cloudscraper
 fuzzywuzzy
 python-Levenshtein
 folium
+sentencepiece
+protobuf
