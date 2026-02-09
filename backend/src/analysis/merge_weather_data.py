@@ -58,8 +58,8 @@ def merge_data(flights_file, airports_file, weather_dir, output_file):
     flights['SchedDepUtc'] = pd.to_datetime(flights['SchedDepUtc'])
     flights['SchedArrUtc'] = pd.to_datetime(flights['SchedArrUtc'])
 
-    flights['DepHour'] = flights['SchedDepUtc'].dt.round('H')
-    flights['ArrHour'] = flights['SchedArrUtc'].dt.round('H')
+    flights['DepHour'] = flights['SchedDepUtc'].dt.round('h')
+    flights['ArrHour'] = flights['SchedArrUtc'].dt.round('h')
 
     if flights['DepHour'].dt.tz is not None:
         flights['DepHour'] = flights['DepHour'].dt.tz_convert(None)

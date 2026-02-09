@@ -6,6 +6,7 @@ import time
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 scripts = [
+    "src/preprocess/clean_airports.py",
     "src/download/google_news_scraper.py",
     "src/download/google_news_resume.py",
     "src/download/reddit_scraper.py",
@@ -15,8 +16,6 @@ scripts = [
     "src/preprocess/clean_news.py",
     "src/preprocess/combine_data.py",
     "src/analysis/sentiment_analysis.py",
-    "src/analysis/sentiment_analysis_delay.py",
-    "src/analysis/sentiment_analysis_noise.py",
     "src/analysis/summary.py",
     "src/analysis/flight_volume_analysis.py",
     "src/analysis/merge_weather_data.py",
