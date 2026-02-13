@@ -100,14 +100,7 @@ def calculate_ensemble_sentiment(text):
     
     final_score = (score_a + score_b) / 2
     
-    if final_score <= 2.5: 
-        polarity = -1
-    elif final_score >= 3.5: 
-        polarity = 1
-    else: 
-        polarity = 0
-        
-    return polarity, final_score
+    return final_score, score_a, score_b
 
 def calculate_sigmoid_weight(row_date, airport_code, strategic_hubs):
     """
@@ -160,14 +153,15 @@ def process_dataset(df, mode, strategic_hubs, keywords=None):
     print("Calculating Ensemble Sentiment & Adaptive Weights...")
     
     for idx, row in tqdm(df_subset.iterrows(), total=len(df_subset)):
-        pol, stars = calculate_ensemble_sentiment(row['text'])
+        stars, score_a, score_b = calculate_ensemble_sentiment(row['text'])
         
         ap_code = row.get('airport_code', 'UNKNOWN')
         weight = calculate_sigmoid_weight(row['date'], ap_code, strategic_hubs)
         
         results.append({
-            'sentiment_polarity': pol,
             'stars_score': stars,
+            'model_a_score': score_a,
+            'model_b_score': score_b,
             'time_weight': weight,
             'weighted_score': stars * weight
         })
