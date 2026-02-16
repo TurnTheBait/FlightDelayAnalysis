@@ -98,7 +98,6 @@ def main():
     df_airports, df_sentiment, df_population = load_data()
     if df_airports is None: return
     
-    # Aggregazione basata sui pesi corretti (weighted_score)
     df_sent_agg = df_sentiment.groupby('airport_code').apply(
         lambda x: np.average(x['stars_score'], weights=x['time_weight'])
     ).reset_index(name='avg_sentiment')
