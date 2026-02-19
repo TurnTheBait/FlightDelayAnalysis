@@ -247,17 +247,14 @@ def main():
 
     df_flights, df_sentiment = load_data(FLIGHTS_FILE, SENTIMENT_FILE)
     
-    # 1. Unified Daily Aggregation (Single Source of Truth)
     daily_merged = aggregate_daily_data(df_flights, df_sentiment)
     
     if daily_merged.empty:
         print("No overlapping data found.")
         return
 
-    # 2. Lagged Analysis on Daily Data
     df_lagged = analyze_lagged_correlation(daily_merged, TABLES_DIR)
     
-    # 3. Derive Global Stats from Daily Data
     print("Deriving global stats from daily data...")
     global_stats = daily_merged.groupby('airport_code').agg({
         'daily_sentiment': 'mean',
@@ -268,7 +265,6 @@ def main():
         'Dep_temp': 'mean'
     }).reset_index()
     
-    # Rename for consistency with correlation function
     global_stats.rename(columns={'daily_sentiment': 'global_sentiment'}, inplace=True)
     
     calculate_correlation(global_stats, TABLES_DIR)

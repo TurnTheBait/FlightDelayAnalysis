@@ -5,6 +5,9 @@ import seaborn as sns
 from fuzzywuzzy import process
 import sys
 import numpy as np
+from geopy.geocoders import Nominatim
+from geopy.distance import geodesic
+import time
 
 CURRENT_FILE = os.path.abspath(__file__)
 ANALYSIS_DIR = os.path.dirname(CURRENT_FILE)
@@ -35,6 +38,45 @@ def load_data():
         print(f"Error loading data: {e}")
         return None, None, None
 
+def get_city_coordinates_cached(city_names, cache_file='city_coords_cache.csv'):
+    geolocator = Nominatim(user_agent="flight_delay_analysis_thesis")
+    
+    cache_path = os.path.join(BACKEND_DIR, 'data', 'processed', 'population', cache_file)
+    if os.path.exists(cache_path):
+        df_cache = pd.read_csv(cache_path)
+        cache = dict(zip(df_cache['city'], list(zip(df_cache['lat'], df_cache['lon']))))
+    else:
+        cache = {}
+        
+    coords = {}
+    updated = False
+    
+    print(f"Geocoding {len(city_names)} cities...")
+    for city in city_names:
+        if city in cache:
+            coords[city] = cache[city]
+        else:
+            try:
+                location = geolocator.geocode(city)
+                if location:
+                    coords[city] = (location.latitude, location.longitude)
+                    cache[city] = (location.latitude, location.longitude)
+                    updated = True
+                    print(f"Geocoded: {city}")
+                else:
+                    print(f"Could not geocode: {city}")
+                    coords[city] = None
+                time.sleep(1)
+            except Exception as e:
+                 print(f"Error geocoding {city}: {e}")
+                 coords[city] = None
+
+    if updated:
+        df_save = pd.DataFrame([(k, v[0], v[1]) for k, v in cache.items() if v is not None], columns=['city', 'lat', 'lon'])
+        df_save.to_csv(cache_path, index=False)
+        
+    return coords
+
 def match_cities(df_airports, df_population):
     print("Matching airports to cities based on population data...")
     mapping = []
@@ -43,54 +85,98 @@ def match_cities(df_airports, df_population):
     for idx, row in df_airports.iterrows():
         airport_code = row['ident']
         municipality = str(row['municipality'])
+        airport_lat = row['latitude_deg']
+        airport_lon = row['longitude_deg']
         
-        if municipality == "London":
-            pass 
-            
         match, score = process.extractOne(municipality, pop_cities)
         
-        if score >= 85: 
+        final_match = match
+        final_score = score
+        
+        if score < 85:
+             name = str(row['name'])
+             match_name, score_name = process.extractOne(name, pop_cities)
+             if score_name > score:
+                 final_match = match_name
+                 final_score = score_name
+        
+        if final_score >= 80:
              mapping.append({
                  'airport_code': airport_code,
                  'municipality': municipality,
-                 'matched_city': match,
-                 'match_score': score
+                 'matched_city': final_match,
+                 'match_score': final_score,
+                 'airport_lat': airport_lat,
+                 'airport_lon': airport_lon
              })
-        else:
-             name = str(row['name'])
-             match_name, score_name = process.extractOne(name, pop_cities)
-             if score_name >= 85:
-                 mapping.append({
-                     'airport_code': airport_code,
-                     'municipality': municipality,
-                     'matched_city': match_name,
-                     'match_score': score_name
-                 })
 
     df_mapping = pd.DataFrame(mapping)
     print(f"Matched {len(df_mapping)} airports to population data.")
     return df_mapping
 
+def calculate_effective_population(df_merged):
+    print("Calculating effective noise-exposed population...")
+    
+    unique_cities = df_merged['matched_city'].unique()
+    city_coords = get_city_coordinates_cached(unique_cities)
+    
+    distances = []
+    effective_populations = []
+    
+    for idx, row in df_merged.iterrows():
+        city = row['matched_city']
+        
+        if city in city_coords and city_coords[city] is not None:
+            city_lat, city_lon = city_coords[city]
+            airport_coords = (row['airport_lat'], row['airport_lon'])
+            
+            dist_km = geodesic(airport_coords, (city_lat, city_lon)).km
+            distances.append(dist_km)
+            
+            REFERENCE_DIST = 10.0
+            weight = 1 / (1 + (dist_km / REFERENCE_DIST)**2)
+            
+            eff_pop = row['population'] * weight
+            effective_populations.append(eff_pop)
+            
+        else:
+            distances.append(None)
+            effective_populations.append(None)
+            
+    df_merged['distance_airport_city_km'] = distances
+    df_merged['effective_population'] = effective_populations
+    
+    df_final = df_merged.dropna(subset=['effective_population'])
+    print(f"Retained {len(df_final)} airports with valid distance data.")
+    
+    return df_final
+
 def analyze_correlation(df_merged):
     print("\nAnalyzing correlations...")
-    corr = df_merged[['population', 'avg_sentiment']].corr()
-    print("Correlation Matrix:")
-    print(corr)
     
-    plt.figure(figsize=(12, 8))
-    sns.scatterplot(data=df_merged, x='population', y='avg_sentiment', hue='match_score', size='population', sizes=(20, 500), alpha=0.7)
+    corr_raw = df_merged[['population', 'avg_sentiment']].corr().iloc[0,1]
+    corr_eff = df_merged[['effective_population', 'avg_sentiment']].corr().iloc[0,1]
     
-    for i, row in df_merged.iterrows():
-        if row['population'] > 1_000_000 or row['avg_sentiment'] < 2 or row['avg_sentiment'] > 4:
-             plt.text(row['population'], row['avg_sentiment'], row['airport_code'], fontsize=9, alpha=0.7)
-
+    print(f"Correlation (Raw Population): {corr_raw:.4f}")
+    print(f"Correlation (Effective Population): {corr_eff:.4f}")
+    
+    plt.figure(figsize=(14, 6))
+    
+    plt.subplot(1, 2, 1)
+    sns.scatterplot(data=df_merged, x='population', y='avg_sentiment', hue='distance_airport_city_km', size='distance_airport_city_km', sizes=(20, 200), alpha=0.7)
     plt.xscale('log')
-    plt.title(f'Airport Noise Sentiment vs City Population (Log Scale)\nCorrelation: {corr.iloc[0,1]:.2f}')
+    plt.title(f'Raw Population vs Sentiment\ncorr={corr_raw:.2f}')
     plt.xlabel('City Population (Log Scale)')
-    plt.ylabel('Average Noise Sentiment Score')
-    plt.grid(True, which="both", ls="-", alpha=0.2)
+    plt.ylabel('Avg Noise Sentiment')
     
-    output_path = os.path.join(FIGURES_RESULTS_DIR, 'sentiment_noise_vs_population.png')
+    plt.subplot(1, 2, 2)
+    sns.scatterplot(data=df_merged, x='effective_population', y='avg_sentiment', hue='distance_airport_city_km', size='distance_airport_city_km', sizes=(20, 200), alpha=0.7)
+    plt.xscale('log')
+    plt.title(f'Noise-Weighted Population vs Sentiment\ncorr={corr_eff:.2f}')
+    plt.xlabel('Effective Population (Log Scale)')
+    plt.ylabel('Avg Noise Sentiment')
+    
+    output_path = os.path.join(FIGURES_RESULTS_DIR, 'sentiment_noise_vs_population_weighted.png')
     plt.savefig(output_path)
     print(f"Saved scatter plot to {output_path}")
 
@@ -107,17 +193,19 @@ def main():
     if df_mapping.empty:
         print("No matches found. Exiting.")
         return
-
+        
     df_mapped_pop = pd.merge(df_mapping, df_population, left_on='matched_city', right_on='city_name', how='left')
 
     icao_to_iata = get_icao_to_iata_mapping(AIRPORTS_CSV_PATH)
     df_mapped_pop['airport_code'] = df_mapped_pop['airport_code'].map(icao_to_iata).fillna(df_mapped_pop['airport_code'])
     
-    df_final = pd.merge(df_mapped_pop, df_sent_agg, on='airport_code', how='inner')
+    df_merged = pd.merge(df_mapped_pop, df_sent_agg, on='airport_code', how='inner')
+    
+    df_final = calculate_effective_population(df_merged)
     
     print(f"Final dataset for analysis: {len(df_final)} airports.")
     
-    df_final.to_csv(os.path.join(TABLES_RESULTS_DIR, 'population_sentiment_noise_merged.csv'), index=False)
+    df_final.to_csv(os.path.join(TABLES_RESULTS_DIR, 'population_sentiment_noise_weighted.csv'), index=False)
     
     analyze_correlation(df_final)
 

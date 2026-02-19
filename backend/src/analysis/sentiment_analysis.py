@@ -105,11 +105,6 @@ def calculate_ensemble_sentiment(text):
 def calculate_sigmoid_weight(row_date, airport_code, strategic_hubs):
     """
     Calculates a time-based weight using a Sigmoid (Logistic) Decay function.
-    
-    Formula: Weight = 1 / (1 + e^(slope * (delta_days - inflection_point)))
-    
-    This keeps the weight near 1.0 for recent events (Plateau) and then drops it sharply 
-    after the inflection point.
     """
     current_date = datetime.now()
     
@@ -156,7 +151,11 @@ def process_dataset(df, mode, strategic_hubs, keywords=None):
         stars, score_a, score_b = calculate_ensemble_sentiment(row['text'])
         
         ap_code = row.get('airport_code', 'UNKNOWN')
-        weight = calculate_sigmoid_weight(row['date'], ap_code, strategic_hubs)
+        
+        if mode == 'noise':
+            weight = 1.0
+        else:
+            weight = calculate_sigmoid_weight(row['date'], ap_code, strategic_hubs)
         
         results.append({
             'stars_score': stars,
