@@ -145,6 +145,9 @@ def process_dataset(df, mode, strategic_hubs, keywords=None):
         print("No data for this category.")
         return
 
+    print("Calculating Media Pressure Index...")
+    review_counts_dict = df_subset['airport_code'].value_counts().to_dict()
+
     results = []
     print("Calculating Ensemble Sentiment & Adaptive Weights...")
     
@@ -157,13 +160,21 @@ def process_dataset(df, mode, strategic_hubs, keywords=None):
             weight = 1.0
         else:
             weight = calculate_time_based_weight(row['date'], ap_code, strategic_hubs)
+            
+        review_count = review_counts_dict.get(ap_code, 1)
+        media_pressure_index = np.log1p(review_count)
+        
+        sentiment_centered = stars - 3.0
+        pressure_impact_score = sentiment_centered * media_pressure_index
         
         results.append({
             'model_a_score': score_a,
             'model_b_score': score_b,
             'combined_score': stars,
             'weight': weight,
-            'weighted_score': stars * weight
+            'weighted_score': stars * weight,
+            'media_pressure_index': media_pressure_index,
+            'pressure_impact_score': pressure_impact_score
         })
 
     result_df = pd.DataFrame(results)

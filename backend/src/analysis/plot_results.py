@@ -3,17 +3,18 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import os
 import matplotlib as mpl
+import sys
+from utils.airport_utils import get_icao_to_iata_mapping
 
 current_script_dir = os.path.dirname(os.path.abspath(__file__))
 backend_dir = os.path.dirname(os.path.dirname(current_script_dir))
 src_dir = os.path.dirname(current_script_dir)
-import sys
+
 INPUT_FILE = os.path.join(backend_dir, 'data', 'sentiment', 'sentiment_results_general.csv')
 OUTPUT_IMG = os.path.join(backend_dir, 'results', 'figures', 'sentiment_overview.png')
 AIRPORTS_PATH = os.path.join(backend_dir, 'data', 'processed', 'airports', 'airports_filtered.csv')
 
 sys.path.append(src_dir)
-from utils.airport_utils import get_icao_to_iata_mapping
 
 def main():
     if not os.path.exists(INPUT_FILE):
