@@ -23,3 +23,6 @@ folium
 sentencepiece
 protobuf
 geopy
+geopandas
+rasterio
+shapely

@@ -102,29 +102,30 @@ def calculate_ensemble_sentiment(text):
     
     return final_score, score_a, score_b
 
-def calculate_sigmoid_weight(row_date, airport_code, strategic_hubs):
+def calculate_time_based_weight(row_date, airport_code, strategic_hubs):
     """
-    Calculates a time-based weight using a Sigmoid (Logistic) Decay function.
+    Calculates a time-based weight.
     """
     current_date = datetime.now()
     
     try:
         dt = pd.to_datetime(row_date)
-        if pd.isna(dt): return 0.5
+        if pd.isna(dt): return 1.0
     except:
-        return 0.5
+        return 1.0
 
     if airport_code in strategic_hubs:
-        inflection_point = 365 * 1.5
-        slope = 0.005 
+        max_days = 365 * 1.5
     else:
-        inflection_point = 365 * 3.0
-        slope = 0.003
+        max_days = 365 * 3.0
 
     delta_days = (current_date - dt).days
     if delta_days < 0: delta_days = 0
     
-    weight = 1 / (1 + np.exp(slope * (delta_days - inflection_point)))
+    if delta_days >= max_days:
+        weight = 1.0
+    else:
+        weight = 5.0 - (4.0 * (delta_days / max_days))
     
     return weight
 
@@ -155,13 +156,13 @@ def process_dataset(df, mode, strategic_hubs, keywords=None):
         if mode == 'noise':
             weight = 1.0
         else:
-            weight = calculate_sigmoid_weight(row['date'], ap_code, strategic_hubs)
+            weight = calculate_time_based_weight(row['date'], ap_code, strategic_hubs)
         
         results.append({
-            'stars_score': stars,
             'model_a_score': score_a,
             'model_b_score': score_b,
-            'time_weight': weight,
+            'combined_score': stars,
+            'weight': weight,
             'weighted_score': stars * weight
         })
 
