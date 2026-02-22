@@ -16,7 +16,7 @@ if not os.path.exists(CSV_PATH):
 
 df = pd.read_csv(CSV_PATH)
 df = df[df['total_mentions'] > 0].copy()
-global_mean_score = df['delay_sentiment'].mean()
+global_mean_score = df['weighted_sentiment'].mean()
 median_volume = df['total_mentions'].median()
 
 print(f"Aeroporti analizzati: {len(df)}")
@@ -29,10 +29,10 @@ sns.set_theme(style="whitegrid")
 scatter = sns.scatterplot(
     data=df,
     x="total_mentions",
-    y="delay_sentiment",
+    y="weighted_sentiment",
     size="total_mentions",
     sizes=(50, 600),
-    hue="delay_sentiment",
+    hue="weighted_sentiment",
     palette="RdYlGn",  
     alpha=0.8,
     edgecolor="black",
@@ -43,10 +43,10 @@ scatter = sns.scatterplot(
 scatter = sns.scatterplot(
     data=df,
     x="total_mentions",
-    y="delay_sentiment",
+    y="weighted_sentiment",
     size="total_mentions",
     sizes=(50, 600),
-    hue="delay_sentiment",
+    hue="weighted_sentiment",
     palette="RdYlGn",  
     alpha=0.8,
     edgecolor="black",
@@ -60,12 +60,12 @@ texts = []
 for i, row in df.iterrows():
     
     is_high_volume = row['total_mentions'] > df['total_mentions'].quantile(0.90)
-    is_extreme_score = row['delay_sentiment'] > 6 or row['delay_sentiment'] < 2
+    is_extreme_score = row['weighted_sentiment'] > 6 or row['weighted_sentiment'] < 2
     
     if is_high_volume or is_extreme_score:
         plt.text(
             row['total_mentions'] + (df['total_mentions'].max() * 0.01), 
-            row['delay_sentiment'], 
+            row['weighted_sentiment'], 
             row['airport_code'], 
             fontsize=9, 
             fontweight='bold', 

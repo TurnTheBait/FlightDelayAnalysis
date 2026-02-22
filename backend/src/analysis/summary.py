@@ -30,14 +30,13 @@ def main():
     stats = df_scored.groupby(['airport_code', 'source']).apply(
         lambda x: pd.Series({
             'count': len(x),
-            'avg_score': calculate_weighted_average(x, 'stars_score', 'time_weight', fallback_to_mean=True)
+            'avg_score': calculate_weighted_average(x, 'combined_score', 'weight', fallback_to_mean=True)
         }),
         include_groups=False
     ).reset_index()
 
     pivot_stats = stats.pivot(index='airport_code', columns='source', values=['count', 'avg_score'])
     pivot_stats.columns = [f"{str(col[1]).lower()}_{col[0]}" for col in pivot_stats.columns]
-    pivot_stats = pivot_stats.reset_index()
     pivot_stats = pivot_stats.reset_index()
 
     icao_to_iata = get_icao_to_iata_mapping(AIRPORTS_PATH)
@@ -73,7 +72,7 @@ def main():
             return total_score_sum / total_weight_sum
         return np.nan
 
-    summary['delay_sentiment'] = summary.apply(calculate_weighted_sentiment, axis=1)
+    summary['weighted_sentiment'] = summary.apply(calculate_weighted_sentiment, axis=1)
 
     summary = summary.sort_values('total_mentions', ascending=False)
     summary = summary[summary['total_mentions'] > 0]
@@ -82,7 +81,7 @@ def main():
     summary.to_csv(OUTPUT_CSV, index=False)
     
     print(f"Analysis complete. Tabella salvata in: {OUTPUT_CSV}")
-    print(summary[['airport_code', 'iso_country', 'total_mentions', 'delay_sentiment']].head())
+    print(summary[['airport_code', 'iso_country', 'total_mentions', 'weighted_sentiment']].head())
 
 if __name__ == "__main__":
     main()

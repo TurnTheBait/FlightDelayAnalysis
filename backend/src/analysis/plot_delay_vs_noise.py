@@ -116,7 +116,7 @@ plt.title('Indice di Pressione Mediatica * Sentiment: Delay vs Noise (Top 20)', 
 plt.xlabel('Codice Aeroporto', fontsize=12)
 plt.ylabel('Voto di Impatto (Sentiment * Pressione)', fontsize=12)
 plt.xticks(rotation=45)
-plt.axhline(0, color='black', linestyle='--', label='Neutro (0)')
+plt.axhline(5.5, color='black', linestyle='--', label='Neutro (5.5)')
 plt.legend(title='Categoria')
 plt.tight_layout()
 pressure_plot_path = os.path.join(results_dir, 'comparison_pressure_impact_delay_vs_noise.png')

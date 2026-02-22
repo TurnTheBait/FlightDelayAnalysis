@@ -48,9 +48,9 @@ def aggregate_daily_data(df_flights, df_sentiment):
     
     sentiment_daily = df_sentiment.groupby(['airport_code', 'date']).agg({
         'weighted_score': 'mean',
-        'stars_score': lambda x: (x <= 3).sum()
+        'combined_score': lambda x: (x <= 3).sum()
     }).reset_index()
-    sentiment_daily.rename(columns={'stars_score': 'negative_review_count', 'weighted_score': 'daily_sentiment'}, inplace=True)
+    sentiment_daily.rename(columns={'combined_score': 'negative_review_count', 'weighted_score': 'daily_sentiment'}, inplace=True)
     
     daily_merged = pd.merge(weather_daily, sentiment_daily, on=['airport_code', 'date'], how='inner')
     

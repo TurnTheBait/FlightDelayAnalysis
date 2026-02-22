@@ -103,27 +103,87 @@ def analyze_correlation(df_merged):
     print(f"Correlation (Raw Population 10km vs Sentiment): {corr_raw:.4f}")
     print(f"Correlation (Capita Normalized by Flights vs Sentiment): {corr_norm:.4f}")
     
-    plt.figure(figsize=(14, 6))
+    sns.set_theme(style="whitegrid", context="talk")
+    fig, axes = plt.subplots(1, 2, figsize=(16, 7))
     
-    plt.subplot(1, 2, 1)
-    sns.scatterplot(data=df_merged, x='population_10km', y='avg_sentiment', 
-                    size='total_flights', sizes=(20, 200), alpha=0.7)
-    plt.xscale('log')
-    plt.title(f'10km Population vs Noise Sentiment\ncorr={corr_raw:.2f}')
-    plt.xlabel('10km Buffer Population (Log Scale)')
-    plt.ylabel('Avg Noise Sentiment')
+    def get_extreme_points(df, x_col, y_col, n=3):
+        extremes = pd.concat([
+            df.nlargest(n, x_col),
+            df.nsmallest(n, x_col),
+            df.nlargest(n, y_col),
+            df.nsmallest(n, y_col)
+        ]).drop_duplicates(subset=['airport_code'])
+        return extremes
+        
+    ax1 = axes[0]
+    sns.scatterplot(
+        data=df_merged, 
+        x='population_10km', 
+        y='avg_sentiment', 
+        size='total_flights', 
+        sizes=(40, 400), 
+        alpha=0.6,
+        color='royalblue',
+        edgecolor='black',
+        linewidth=0.5,
+        ax=ax1,
+        legend=False
+    )
     
-    plt.subplot(1, 2, 2)
-    sns.scatterplot(data=df_merged, x='capita_normalized', y='avg_sentiment', 
-                    size='total_flights', sizes=(20, 200), alpha=0.7)
-    plt.xscale('log')
-    plt.title(f'Normalized Population vs Noise Sentiment\ncorr={corr_norm:.2f}')
-    plt.xlabel('Population / Total Flights (Log Scale)')
-    plt.ylabel('Avg Noise Sentiment')
+    extremes_1 = get_extreme_points(df_merged, 'population_10km', 'avg_sentiment', n=3)
+    for _, row in extremes_1.iterrows():
+        ax1.annotate(row['airport_code'], 
+                     (row['population_10km'], row['avg_sentiment']), 
+                     xytext=(5, 5), textcoords='offset points', 
+                     fontsize=9, fontweight='bold', color='darkblue')
+
+    sns.regplot(
+        data=df_merged, x='population_10km', y='avg_sentiment', 
+        scatter=False, ax=ax1, color='darkred', line_kws={'linestyle':'--', 'alpha':0.8}
+    )
+    ax1.set_xscale('log')
+    ax1.set_title(f'10km Buffer Population vs Noise Sentiment\n(Pearson r = {corr_raw:.2f})', pad=15, fontsize=14, fontweight='bold')
+    ax1.set_xlabel('10km Buffer Population (Log Scale)', fontsize=12)
+    ax1.set_ylabel('Average Noise Sentiment (1-5)', fontsize=12)
+    ax1.tick_params(axis='both', which='major', labelsize=11)
+    
+    ax2 = axes[1]
+    scatter2 = sns.scatterplot(
+        data=df_merged, 
+        x='capita_normalized', 
+        y='avg_sentiment', 
+        size='total_flights', 
+        sizes=(40, 400), 
+        alpha=0.6,
+        color='mediumseagreen',
+        edgecolor='black',
+        linewidth=0.5,
+        ax=ax2
+    )
+    
+    extremes_2 = get_extreme_points(df_merged, 'capita_normalized', 'avg_sentiment', n=3)
+    for _, row in extremes_2.iterrows():
+        ax2.annotate(row['airport_code'], 
+                     (row['capita_normalized'], row['avg_sentiment']), 
+                     xytext=(5, 5), textcoords='offset points', 
+                     fontsize=9, fontweight='bold', color='darkgreen')
+
+    sns.regplot(
+        data=df_merged, x='capita_normalized', y='avg_sentiment', 
+        scatter=False, ax=ax2, color='darkred', line_kws={'linestyle':'--', 'alpha':0.8}
+    )
+    ax2.set_xscale('log')
+    ax2.set_title(f'Normalized Population vs Noise Sentiment\n(Pearson r = {corr_norm:.2f})', pad=15, fontsize=14, fontweight='bold')
+    ax2.set_xlabel('Population per Scheduled Flight (Log Scale)', fontsize=12)
+    ax2.set_ylabel('Average Noise Sentiment (1-5)', fontsize=12)
+    ax2.tick_params(axis='both', which='major', labelsize=11)
+    
+    handles, labels = scatter2.get_legend_handles_labels()
+    ax2.legend(handles, labels, title='Total Flights', bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=10, title_fontsize=11)
     
     plt.tight_layout()
     output_path = os.path.join(FIGURES_RESULTS_DIR, 'sentiment_noise_vs_population_raster.png')
-    plt.savefig(output_path)
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
     print(f"Saved scatter plot to {output_path}")
 
 def main():

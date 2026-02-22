@@ -44,28 +44,21 @@ def main():
         volume_data.append({'airport_code': airport, 'total_flights': total})
         
     df_volume = pd.DataFrame(volume_data)
-    
     df_merged = df_sentiment.merge(df_volume, on='airport_code', how='left')
-    
     df_merged['total_flights'] = df_merged['total_flights'].fillna(0)
-    
-    df_merged = df_merged[(df_merged['total_flights'] > 0) & (df_merged['delay_sentiment'].notna())].copy()
+    df_merged = df_merged[(df_merged['total_flights'] > 0) & (df_merged['weighted_sentiment'].notna())].copy()
 
     print("Calculating Composite Score...")
     
-
-    df_merged['delay_sentiment'] = df_merged['delay_sentiment'] * 2
-
-    df_merged['sentiment_norm'] = (df_merged['delay_sentiment'] - 2) / 8
-    
+    df_merged['weighted_sentiment'] = df_merged['weighted_sentiment'] * 2
+    df_merged['sentiment_norm'] = min_max_normalize(df_merged['weighted_sentiment'])
     df_merged['log_volume'] = np.log10(df_merged['total_flights'] + 1)
     df_merged['volume_norm'] = min_max_normalize(df_merged['log_volume'])
     
-    w_sentiment = 0.7
-    w_volume = 0.3
+    w_sentiment = 0.5
+    w_volume = 0.5
     
     df_merged['composite_score'] = (df_merged['sentiment_norm'] * w_sentiment) + (df_merged['volume_norm'] * w_volume)
-    
     df_merged['composite_score_scaled'] = df_merged['composite_score'] * 10
     
     df_merged = df_merged.sort_values('composite_score_scaled', ascending=False)
@@ -75,7 +68,7 @@ def main():
         
     print(f"Analysis complete. Results saved to: {OUTPUT_CSV}")
     print("\nTop 5 Airports by Volume-Weighted Score:")
-    print(df_merged[['airport_code', 'name', 'total_flights', 'delay_sentiment', 'composite_score_scaled']].head())
+    print(df_merged[['airport_code', 'name', 'total_flights', 'weighted_sentiment', 'composite_score_scaled']].head())
 
 if __name__ == "__main__":
     main()

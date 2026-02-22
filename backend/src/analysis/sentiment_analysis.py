@@ -165,7 +165,9 @@ def process_dataset(df, mode, strategic_hubs, keywords=None):
         media_pressure_index = np.log1p(review_count)
         
         sentiment_centered = stars - 3.0
-        pressure_impact_score = sentiment_centered * media_pressure_index
+        raw_impact = sentiment_centered * media_pressure_index
+        sigmoid_val = 1 / (1 + np.exp(-0.45 * raw_impact))
+        pressure_impact_score = 1 + 9 * sigmoid_val
         
         results.append({
             'model_a_score': score_a,

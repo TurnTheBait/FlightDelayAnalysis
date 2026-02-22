@@ -31,7 +31,7 @@ def main():
         print("Warning: Sentiment file is empty.")
         return
 
-    df['score_scaled'] = df['stars_score'] * 2
+    df['score_scaled'] = df['combined_score'] * 2
 
     agg_data = df.groupby('airport_code')['score_scaled'].agg(['mean', 'count']).reset_index()
 

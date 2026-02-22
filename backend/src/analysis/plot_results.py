@@ -1,20 +1,20 @@
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
 import os
-import matplotlib as mpl
 import sys
-from utils.airport_utils import get_icao_to_iata_mapping
 
 current_script_dir = os.path.dirname(os.path.abspath(__file__))
 backend_dir = os.path.dirname(os.path.dirname(current_script_dir))
 src_dir = os.path.dirname(current_script_dir)
+sys.path.append(src_dir)
+
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+from utils.airport_utils import get_icao_to_iata_mapping
 
 INPUT_FILE = os.path.join(backend_dir, 'data', 'sentiment', 'sentiment_results_general.csv')
 OUTPUT_IMG = os.path.join(backend_dir, 'results', 'figures', 'sentiment_overview.png')
 AIRPORTS_PATH = os.path.join(backend_dir, 'data', 'processed', 'airports', 'airports_filtered.csv')
-
-sys.path.append(src_dir)
 
 def main():
     if not os.path.exists(INPUT_FILE):
@@ -23,7 +23,7 @@ def main():
 
     df = pd.read_csv(INPUT_FILE)
 
-    df['score_scaled'] = df['stars_score'] * 2
+    df['score_scaled'] = df['combined_score'] * 2
 
     agg_data = df.groupby('airport_code')['score_scaled'].agg(['mean', 'count']).reset_index()
     agg_data = agg_data.sort_values('mean', ascending=False)
