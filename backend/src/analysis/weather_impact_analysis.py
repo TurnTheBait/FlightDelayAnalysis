@@ -3,6 +3,10 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 import numpy as np
 
+BASE_DIR = Path(__file__).resolve().parents[3]
+INPUT_FILE = BASE_DIR / "backend" / "data" / "merged" / "flights_with_weather.csv"
+OUTPUT_DIR = BASE_DIR / "backend" / "results" / "figures" / "weather_impact"
+
 def analyze_weather_impact(input_file, output_dir):
     print(f"Loading data from {input_file}...")
     df = pd.read_csv(input_file, low_memory=False)
@@ -76,8 +80,5 @@ def analyze_weather_impact(input_file, output_dir):
     print(f"Analysis complete. Figures saved to {output_dir}")
 
 if __name__ == "__main__":
-    BASE_DIR = Path(__file__).resolve().parents[3]
-    INPUT_FILE = BASE_DIR / "backend" / "data" / "merged" / "flights_with_weather.csv"
-    OUTPUT_DIR = BASE_DIR / "backend" / "results" / "figures"
     
     analyze_weather_impact(INPUT_FILE, OUTPUT_DIR)

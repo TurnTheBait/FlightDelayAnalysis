@@ -59,7 +59,7 @@ def main():
         
     print(f"Analysis complete. Results saved to: {OUTPUT_CSV}")
     print("\nTop 5 Airports by Volume-Weighted Score:")
-    print(df_merged[['airport_code', 'name', 'total_flights', 'global_weighted_sentiment', 'avg_pressure_impact', 'composite_score_scaled']].head())
+    print(df_merged[['airport_code', 'name', 'total_flights', 'global_weighted_sentiment', 'global_pressure_sentiment', 'composite_score_scaled']].head())
 
 if __name__ == "__main__":
     main()

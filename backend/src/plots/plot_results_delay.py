@@ -100,10 +100,10 @@ def main():
     fig_height_agg = max(10, len(aggregated_scores) * 0.4 + total_lines * 0.25)
     plt.figure(figsize=(16, fig_height_agg))
 
-    colors_agg = get_colors(aggregated_scores['rounded_score'])
+    colors_agg = {row.airport_code: cmap(norm(row.rounded_score)) for row in aggregated_scores.itertuples()}
 
     if not aggregated_scores.empty:
-        ax_agg = sns.barplot(x='rounded_score', y='airport_code', data=aggregated_scores, hue='rounded_score', palette=colors_agg, edgecolor='black', legend=False)
+        ax_agg = sns.barplot(x='rounded_score', y='airport_code', data=aggregated_scores, hue='airport_code', palette=colors_agg, edgecolor='black', legend=False)
 
         plt.title('Aggregated Delay Sentiment Ranking (Grouped by Score)', fontsize=16, weight='bold')
         plt.xlabel('Sentiment Score (1-10)', fontsize=12)

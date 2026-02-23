@@ -9,16 +9,18 @@ scripts = [
     "src/preprocess/clean_news.py",
     "src/preprocess/combine_data.py",
     "src/analysis/sentiment_analysis.py",
+    "src/analysis/calculate_scores.py",
     "src/analysis/summary.py",
     "src/analysis/flight_volume_analysis.py",
     "src/analysis/merge_weather_data.py",
     "src/analysis/sentiment_weather_correlation.py",
-    "src/analysis/plot_results.py",
-    "src/analysis/plot_results_delay.py",
-    "src/analysis/plot_results_noise.py",
-    "src/analysis/plot_volume_results.py",
+    "src/plots/plot_results.py",
+    "src/plots/plot_results_delay.py",
+    "src/plots/plot_results_noise.py",
+    "src/plots/plot_volume_results.py",
+    "src/plots/plot_delay_vs_noise.py",
     "src/analysis/population_sentiment_analysis.py",
-    "src/analysis/plot_reliability_summary.py"
+    "src/plots/plot_reliability_summary.py"
 ]
 
 def run_script(script_path):

@@ -42,7 +42,7 @@ def main():
     plt.figure(figsize=(18, 10))
 
     plt.subplot(1, 2, 1)
-    colors_top = get_colors(top_airports['mean'])
+    colors_top = {row.airport_code: cmap(norm(row.mean)) for row in top_airports.itertuples()}
     sns.barplot(x='mean', y='airport_code', hue='airport_code', data=top_airports, palette=colors_top, edgecolor='black', legend=False)
     plt.title(f'Top {top_n} Airports by Sentiment', fontsize=14, weight='bold')
     plt.xlabel('Average Score (1-10)')
@@ -54,7 +54,7 @@ def main():
        plt.text(row.mean + 0.1, i, f"{row.mean:.1f}", va='center', fontsize=10, weight='bold')
 
     plt.subplot(1, 2, 2)
-    colors_bottom = get_colors(bottom_airports['mean'])
+    colors_bottom = {row.airport_code: cmap(norm(row.mean)) for row in bottom_airports.itertuples()}
     sns.barplot(x='mean', y='airport_code', hue='airport_code', data=bottom_airports, palette=colors_bottom, edgecolor='black', legend=False)
     plt.title(f'Bottom {top_n} Airports by Sentiment', fontsize=14, weight='bold')
     plt.xlabel('Average Score (1-10)')
@@ -124,7 +124,7 @@ def main():
     fig_height_agg = max(10, len(aggregated_scores) * 0.4 + total_lines * 0.25)
     plt.figure(figsize=(16, fig_height_agg))
 
-    colors_agg = get_colors(aggregated_scores['rounded_score'])
+    colors_agg = {row.rounded_score: cmap(norm(row.rounded_score)) for row in aggregated_scores.itertuples()}
 
     ax_agg = sns.barplot(x='rounded_score', y='airport_code', hue='rounded_score', data=aggregated_scores, palette=colors_agg, edgecolor='black', legend=False)
 

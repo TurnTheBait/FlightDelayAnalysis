@@ -11,7 +11,7 @@ src_dir = os.path.dirname(current_script_dir)
 backend_dir = os.path.dirname(src_dir)
 
 AIRPORTS_CSV_PATH = os.path.join(backend_dir, 'data', 'processed', 'airports', 'airports_filtered.csv')
-OUTPUT_PATH = os.path.join(backend_dir, 'data', 'sentiment', 'reddit_raw.csv')
+OUTPUT_PATH = os.path.join(backend_dir, 'data', 'raw', 'reddit', 'reddit_raw.csv')
 KEYWORDS_PATH = os.path.join(backend_dir, 'config', 'keywords.json')
 
 USER_AGENTS = [

@@ -6,9 +6,9 @@ src_dir = os.path.dirname(current_script_dir)
 backend_dir = os.path.dirname(src_dir)
 
 NEWS_PATH = os.path.join(backend_dir, 'data', 'processed', 'news', 'news_cleaned.csv')
-REDDIT_PATH = os.path.join(backend_dir, 'data', 'sentiment', 'reddit_raw.csv')
-SKYTRAX_PATH = os.path.join(backend_dir, 'data', 'sentiment', 'skytrax_raw.csv')
-OUTPUT_PATH = os.path.join(backend_dir, 'data', 'sentiment', 'combined_data.csv')
+REDDIT_PATH = os.path.join(backend_dir, 'data', 'raw', 'reddit', 'reddit_raw.csv')
+SKYTRAX_PATH = os.path.join(backend_dir, 'data', 'raw', 'skytrax', 'skytrax_raw.csv')
+OUTPUT_PATH = os.path.join(backend_dir, 'data', 'merged', 'combined_data.csv')
 
 dfs = []
 

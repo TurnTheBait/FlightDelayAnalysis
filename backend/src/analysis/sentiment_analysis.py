@@ -7,6 +7,10 @@ import numpy as np
 from datetime import datetime
 import re
 from tqdm import tqdm
+import logging
+from transformers import logging as hf_logging
+
+hf_logging.set_verbosity_error()
 
 CURRENT_FILE = os.path.abspath(__file__)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(CURRENT_FILE)))
@@ -19,13 +23,15 @@ FLIGHTS_DATA_PATH = os.path.join(DATA_DIR, 'processed', 'delays', 'delays_consol
 MODEL_A_NAME = "nlptown/bert-base-multilingual-uncased-sentiment"
 MODEL_B_NAME = "cardiffnlp/twitter-xlm-roberta-base-sentiment"
 
+HF_TOKEN = os.environ.get("HF_TOKEN")
+
 print(f"Loading Model A: {MODEL_A_NAME}")
-tokenizer_a = AutoTokenizer.from_pretrained(MODEL_A_NAME)
-model_a = AutoModelForSequenceClassification.from_pretrained(MODEL_A_NAME)
+tokenizer_a = AutoTokenizer.from_pretrained(MODEL_A_NAME, token=HF_TOKEN)
+model_a = AutoModelForSequenceClassification.from_pretrained(MODEL_A_NAME, token=HF_TOKEN)
 
 print(f"Loading Model B: {MODEL_B_NAME}")
-tokenizer_b = AutoTokenizer.from_pretrained(MODEL_B_NAME)
-model_b = AutoModelForSequenceClassification.from_pretrained(MODEL_B_NAME)
+tokenizer_b = AutoTokenizer.from_pretrained(MODEL_B_NAME, token=HF_TOKEN)
+model_b = AutoModelForSequenceClassification.from_pretrained(MODEL_B_NAME, token=HF_TOKEN)
 
 def get_icao_to_iata_mapping(csv_path):
     if not os.path.exists(csv_path):
@@ -44,18 +50,13 @@ def get_dynamic_strategic_hubs(flights_path, airports_path, top_n=30):
     try:
         cols_to_use = ['SchedDepApt', 'SchedArrApt']
         df_flights = pd.read_csv(flights_path, usecols=cols_to_use)
-        
+
         dep_counts = df_flights['SchedDepApt'].value_counts()
         arr_counts = df_flights['SchedArrApt'].value_counts()
         
         total_movements = dep_counts.add(arr_counts, fill_value=0)
-        
         top_iata_list = total_movements.sort_values(ascending=False).head(top_n).index.tolist()
-        
         top_iata_list = [str(x).strip().upper() for x in top_iata_list if pd.notna(x)]
-        
-        print(f"Identified {len(top_iata_list)} Strategic Hubs (Based on Total Movements).")
-        print(f"Top 5 Hubs: {top_iata_list[:5]}")
         
         return top_iata_list
 
@@ -147,41 +148,22 @@ def process_dataset(df, mode, strategic_hubs, keywords=None):
         print("No data for this category.")
         return
 
-    print("Calculating Media Pressure Index...")
-    review_counts_dict = df_subset['airport_code'].value_counts().to_dict()
-
     results = []
-    print("Calculating Ensemble Sentiment & Adaptive Weights...")
+    print("Calculating Ensemble Sentiment...")
     
     for idx, row in tqdm(df_subset.iterrows(), total=len(df_subset)):
         score_10, score_a, score_b = calculate_ensemble_sentiment(row['text'])
         
-        ap_code = row.get('airport_code', 'UNKNOWN')
-        
-        weight = calculate_time_based_weight(row['date'], ap_code, strategic_hubs)
-            
-        review_count = review_counts_dict.get(ap_code, 1)
-        media_pressure_index = np.log1p(review_count)
-        
-        sentiment_centered = score_10 - 5.5
-        raw_impact = sentiment_centered * media_pressure_index
-        sigmoid_val = 1 / (1 + np.exp(-0.20 * raw_impact))
-        pressure_impact_score = 1 + 9 * sigmoid_val
-        
         results.append({
             'model_a_score': score_a,
             'model_b_score': score_b,
-            'combined_score': score_10,
-            'weight': weight,
-            'weighted_score': score_10 * weight,
-            'media_pressure_index': media_pressure_index,
-            'pressure_impact_score': pressure_impact_score
+            'combined_score': score_10
         })
 
     result_df = pd.DataFrame(results)
     final_df = pd.concat([df_subset.reset_index(drop=True), result_df], axis=1)
     
-    output_filename = f"sentiment_results_{mode}.csv"
+    output_filename = f"sentiment_results _raw_{mode}.csv"
     output_path = os.path.join(DATA_DIR, 'sentiment', output_filename)
     final_df.to_csv(output_path, index=False)
     print(f"Saved: {output_path}")
