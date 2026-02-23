@@ -108,9 +108,9 @@ def calculate_time_based_weight(row_date, airport_code, strategic_hubs):
         return 1.0
 
     if airport_code in strategic_hubs:
-        decay_days = 365 * 1.5
+        decay_days = 365 * 6.0
     else:
-        decay_days = 365 * 3.0
+        decay_days = 365 * 8.0
 
     plateau_days = 365 * 2
 
