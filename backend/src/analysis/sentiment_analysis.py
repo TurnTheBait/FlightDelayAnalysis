@@ -64,7 +64,6 @@ def get_dynamic_strategic_hubs(flights_path, airports_path, top_n=30):
         return []
 
 def calculate_bert_sentiment_a(text):
-    """Calculates sentiment using the existing NLPTown model (1-5 stars)."""
     if not text or pd.isna(text):
         return 3.0
     
@@ -78,7 +77,6 @@ def calculate_bert_sentiment_a(text):
     return stars
 
 def calculate_roberta_sentiment_b(text):
-    """Calculates sentiment using the Twitter XLM-RoBERTa model and maps to 1-5 stars."""
     if not text or pd.isna(text):
         return 3.0
     
@@ -93,8 +91,6 @@ def calculate_roberta_sentiment_b(text):
     return stars_equivalent
 
 def calculate_ensemble_sentiment(text):
-    """Averages the scores from both models."""
-    
     score_a = calculate_bert_sentiment_a(text)
     score_b = calculate_roberta_sentiment_b(text)
     
@@ -103,9 +99,6 @@ def calculate_ensemble_sentiment(text):
     return final_score, score_a, score_b
 
 def calculate_time_based_weight(row_date, airport_code, strategic_hubs):
-    """
-    Calculates a time-based weight.
-    """
     current_date = datetime.now()
     
     try:
@@ -115,17 +108,24 @@ def calculate_time_based_weight(row_date, airport_code, strategic_hubs):
         return 1.0
 
     if airport_code in strategic_hubs:
-        max_days = 365 * 1.5
+        decay_days = 365 * 1.5
     else:
-        max_days = 365 * 3.0
+        decay_days = 365 * 3.0
+
+    plateau_days = 365 * 2
 
     delta_days = (current_date - dt).days
     if delta_days < 0: delta_days = 0
     
-    if delta_days >= max_days:
+    if delta_days <= plateau_days:
+        return 5.0
+        
+    decay_delta = delta_days - plateau_days
+
+    if decay_delta >= decay_days:
         weight = 1.0
     else:
-        weight = 5.0 - (4.0 * (delta_days / max_days))
+        weight = 5.0 - (4.0 * (decay_delta / decay_days))
     
     return weight
 
@@ -137,7 +137,7 @@ def process_dataset(df, mode, strategic_hubs, keywords=None):
     if keywords:
         pattern = '|'.join(map(re.escape, keywords))
         df_subset = df_subset[df_subset['text'].str.contains(pattern, case=False, na=False)]
-        print(f"Filtered rows (Keyword match): {len(df_subset)}")
+        print(f"Filtered rows: {len(df_subset)}")
     else:
         print(f"Using full dataset: {len(df_subset)}")
 
@@ -156,10 +156,7 @@ def process_dataset(df, mode, strategic_hubs, keywords=None):
         
         ap_code = row.get('airport_code', 'UNKNOWN')
         
-        if mode == 'noise':
-            weight = 1.0
-        else:
-            weight = calculate_time_based_weight(row['date'], ap_code, strategic_hubs)
+        weight = calculate_time_based_weight(row['date'], ap_code, strategic_hubs)
             
         review_count = review_counts_dict.get(ap_code, 1)
         media_pressure_index = np.log1p(review_count)
