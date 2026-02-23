@@ -52,19 +52,14 @@ def merge_data(flights_file, airports_file, weather_dir, output_file):
     iata_to_icao = load_airports_mapping(airports_file)
 
     print(f"Loading flight data from {flights_file}...")
-    flights = pd.read_csv(flights_file)
+    flights = pd.read_csv(flights_file, low_memory=False)
     print(f"Loaded {len(flights)} flights.")
     
-    flights['SchedDepUtc'] = pd.to_datetime(flights['SchedDepUtc'])
-    flights['SchedArrUtc'] = pd.to_datetime(flights['SchedArrUtc'])
+    flights['SchedDepUtc'] = pd.to_datetime(flights['SchedDepUtc'], utc=True)
+    flights['SchedArrUtc'] = pd.to_datetime(flights['SchedArrUtc'], utc=True)
 
-    flights['DepHour'] = flights['SchedDepUtc'].dt.round('h')
-    flights['ArrHour'] = flights['SchedArrUtc'].dt.round('h')
-
-    if flights['DepHour'].dt.tz is not None:
-        flights['DepHour'] = flights['DepHour'].dt.tz_convert(None)
-    if flights['ArrHour'].dt.tz is not None:
-        flights['ArrHour'] = flights['ArrHour'].dt.tz_convert(None)
+    flights['DepHour'] = flights['SchedDepUtc'].dt.round('h').dt.tz_localize(None)
+    flights['ArrHour'] = flights['SchedArrUtc'].dt.round('h').dt.tz_localize(None)
 
     flights['DepICAO'] = flights['SchedDepApt'].map(iata_to_icao)
     flights['ArrICAO'] = flights['SchedArrApt'].map(iata_to_icao)

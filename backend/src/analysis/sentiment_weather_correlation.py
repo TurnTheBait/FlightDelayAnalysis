@@ -7,7 +7,6 @@ from pathlib import Path
 import sys
 from datetime import timedelta
 
-
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from utils.airport_utils import get_icao_to_iata_mapping
 
@@ -48,7 +47,7 @@ def aggregate_daily_data(df_flights, df_sentiment):
     
     sentiment_daily = df_sentiment.groupby(['airport_code', 'date']).agg({
         'weighted_score': 'mean',
-        'combined_score': lambda x: (x <= 3).sum()
+        'combined_score': lambda x: (x < 5.5).sum()
     }).reset_index()
     sentiment_daily.rename(columns={'combined_score': 'negative_review_count', 'weighted_score': 'daily_sentiment'}, inplace=True)
     
@@ -56,9 +55,6 @@ def aggregate_daily_data(df_flights, df_sentiment):
     
     print(f"Daily merged dataset has {len(daily_merged)} records.")
     return daily_merged
-
-    print("Lagged analysis complete.")
-    return df_lagged
 
 def calculate_correlation(df, tables_dir):
     print("Calculating correlations...")
@@ -132,8 +128,6 @@ def analyze_lagged_correlation(daily_data, tables_dir):
     print("Lagged analysis complete.")
     return df_lagged
 
-    return df_lagged
-
 def plot_results(df, df_lagged, output_dir):
     print("Plotting results...")
     sns.set_theme(style="whitegrid")
@@ -161,8 +155,9 @@ def plot_results(df, df_lagged, output_dir):
             plt.figure(figsize=(12, 8))
             sns.boxplot(x='Time_Lag', y='Sentiment_Score', hue='event_type', data=df_melted)
             plt.title('Sentiment Score Distribution After Weather Events')
-            plt.ylabel('Average Daily Sentiment Score')
+            plt.ylabel('Average Daily Sentiment Score (1-10)')
             plt.xlabel('Time Lag')
+            plt.ylim(0, 10.5)
             plt.legend(title='Event Type')
             plt.savefig(os.path.join(output_dir, 'lagged_sentiment_boxplot.png'))
             plt.close()
@@ -198,6 +193,7 @@ def plot_results(df, df_lagged, output_dir):
     plt.title(f'Delay Sentiment vs Average Departure Delay (r={corr:.2f})')
     plt.xlabel('Delay Sentiment Score (1-10)')
     plt.ylabel('Average Departure Delay (min)')
+    plt.xlim(0, 10.5)
     plt.legend()
     plt.savefig(os.path.join(output_dir, 'sentiment_vs_departure_delay.png'))
     plt.close()
@@ -208,6 +204,7 @@ def plot_results(df, df_lagged, output_dir):
     plt.title(f'Delay Sentiment vs Average Arrival Delay (r={corr:.2f})')
     plt.xlabel('Delay Sentiment Score (1-10)')
     plt.ylabel('Average Arrival Delay (min)')
+    plt.xlim(0, 10.5)
     plt.legend()
     plt.savefig(os.path.join(output_dir, 'sentiment_vs_arrival_delay.png'))
     plt.close()
@@ -218,6 +215,7 @@ def plot_results(df, df_lagged, output_dir):
     plt.title(f'Delay Sentiment vs Average Precipitation (r={corr:.2f})')
     plt.xlabel('Delay Sentiment Score (1-10)')
     plt.ylabel('Average Precipitation (mm)')
+    plt.xlim(0, 10.5)
     plt.legend()
     plt.savefig(os.path.join(output_dir, 'sentiment_vs_weather_prcp.png'))
     plt.close()
@@ -228,6 +226,7 @@ def plot_results(df, df_lagged, output_dir):
     plt.title(f'Delay Sentiment vs Average Wind Speed (r={corr:.2f})')
     plt.xlabel('Delay Sentiment Score (1-10)')
     plt.ylabel('Average Wind Speed (km/h)')
+    plt.xlim(0, 10.5)
     plt.legend()
     plt.savefig(os.path.join(output_dir, 'sentiment_vs_weather_wspd.png'))
     plt.close()

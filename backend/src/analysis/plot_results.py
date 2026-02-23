@@ -1,5 +1,6 @@
 import os
 import sys
+import textwrap
 
 current_script_dir = os.path.dirname(os.path.abspath(__file__))
 backend_dir = os.path.dirname(os.path.dirname(current_script_dir))
@@ -23,7 +24,7 @@ def main():
 
     df = pd.read_csv(INPUT_FILE)
 
-    df['score_scaled'] = df['combined_score'] * 2
+    df['score_scaled'] = df['combined_score']
 
     agg_data = df.groupby('airport_code')['score_scaled'].agg(['mean', 'count']).reset_index()
     agg_data = agg_data.sort_values('mean', ascending=False)
@@ -44,10 +45,10 @@ def main():
     colors_top = get_colors(top_airports['mean'])
     sns.barplot(x='mean', y='airport_code', hue='airport_code', data=top_airports, palette=colors_top, edgecolor='black', legend=False)
     plt.title(f'Top {top_n} Airports by Sentiment', fontsize=14, weight='bold')
-    plt.xlabel('Average Score (0-10)')
+    plt.xlabel('Average Score (1-10)')
     plt.ylabel('')
     plt.xlim(0, 10.5)
-    plt.axvline(x=6, color='black', linestyle='--', linewidth=1, label='Neutral (6.0)')
+    plt.axvline(x=5.5, color='black', linestyle='--', linewidth=1, label='Neutral (5.5)')
 
     for i, row in enumerate(top_airports.itertuples()):
        plt.text(row.mean + 0.1, i, f"{row.mean:.1f}", va='center', fontsize=10, weight='bold')
@@ -56,10 +57,10 @@ def main():
     colors_bottom = get_colors(bottom_airports['mean'])
     sns.barplot(x='mean', y='airport_code', hue='airport_code', data=bottom_airports, palette=colors_bottom, edgecolor='black', legend=False)
     plt.title(f'Bottom {top_n} Airports by Sentiment', fontsize=14, weight='bold')
-    plt.xlabel('Average Score (0-10)')
+    plt.xlabel('Average Score (1-10)')
     plt.ylabel('')
     plt.xlim(0, 10.5)
-    plt.axvline(x=6, color='black', linestyle='--', linewidth=1, label='Neutral (6.0)')
+    plt.axvline(x=5.5, color='black', linestyle='--', linewidth=1, label='Neutral (5.5)')
 
     for i, row in enumerate(bottom_airports.itertuples()):
        plt.text(row.mean + 0.1, i, f"{row.mean:.1f}", va='center', fontsize=10, weight='bold')
@@ -96,9 +97,9 @@ def main():
 
     plt.title('Volume vs. Sentiment', fontsize=14, weight='bold')
     plt.xlabel('Number of Reviews', fontsize=12)
-    plt.ylabel('Average Sentiment Score (0-10)', fontsize=12)
+    plt.ylabel('Average Sentiment Score (1-10)', fontsize=12)
     plt.grid(True, linestyle='--', alpha=0.6)
-    plt.axhline(y=6, color='gray', linestyle='--', label='Neutral Threshold')
+    plt.axhline(y=5.5, color='gray', linestyle='--', label='Neutral Threshold (5.5)')
     plt.ylim(0, 10.5)
 
     output_scatter = os.path.join(backend_dir, 'results', 'figures', 'sentiment_scatter.png')
@@ -107,7 +108,6 @@ def main():
 
     agg_data['rounded_score'] = agg_data['mean'].round(1)
     
-    import textwrap
     def create_label(codes):
         code_list = list(codes)
         text = ", ".join(code_list)
@@ -126,13 +126,13 @@ def main():
 
     colors_agg = get_colors(aggregated_scores['rounded_score'])
 
-    ax_agg = sns.barplot(x='rounded_score', y='airport_code', hue='airport_code', data=aggregated_scores, palette=colors_agg, edgecolor='black', legend=False)
+    ax_agg = sns.barplot(x='rounded_score', y='airport_code', hue='rounded_score', data=aggregated_scores, palette=colors_agg, edgecolor='black', legend=False)
 
     plt.title('Aggregated Sentiment Ranking (Grouped by Score)', fontsize=16, weight='bold')
-    plt.xlabel('Sentiment Score (0-10)', fontsize=12)
+    plt.xlabel('Sentiment Score (1-10)', fontsize=12)
     plt.ylabel('Airports (Codes)', fontsize=12)
     plt.xlim(0, 10.5)
-    plt.axvline(x=6, color='black', linestyle='--', linewidth=1)
+    plt.axvline(x=5.5, color='black', linestyle='--', linewidth=1)
 
     for i, row in enumerate(aggregated_scores.itertuples()):
         ax_agg.text(row.rounded_score + 0.05, i, f"{row.rounded_score:.1f}", va='center', fontsize=10, weight='bold')

@@ -23,7 +23,7 @@ def main():
     df = pd.read_csv(INPUT_FILE)
     
     df['total_flights'] = pd.to_numeric(df['total_flights'], errors='coerce').fillna(0)
-    df['weighted_sentiment'] = pd.to_numeric(df['weighted_sentiment'], errors='coerce')
+    df['global_weighted_sentiment'] = pd.to_numeric(df['global_weighted_sentiment'], errors='coerce')
     df['composite_score_scaled'] = pd.to_numeric(df['composite_score_scaled'], errors='coerce')
     
     norm = mpl.colors.Normalize(vmin=0, vmax=10)
@@ -75,7 +75,7 @@ def main():
     scatter = sns.scatterplot(
         data=df, 
         x='total_flights', 
-        y='weighted_sentiment', 
+        y='global_weighted_sentiment', 
         size='total_mentions', 
         hue='composite_score_scaled', 
         sizes=(20, 500), 
@@ -88,20 +88,20 @@ def main():
     plt.xscale('log')
     plt.title('Flight Volume vs. Global Sentiment', fontsize=16, weight='bold')
     plt.xlabel('Total Flights (Log Scale)', fontsize=12)
-    plt.ylabel('Global Sentiment (2-10)', fontsize=12)
+    plt.ylabel('Global Sentiment (1-10)', fontsize=12)
 
     plt.ylim(0, 10.5)
     plt.grid(True, which="both", ls="-", alpha=0.2)
-    plt.axhline(y=6, color='gray', linestyle='--', label='Neutral Sentiment (6.0)')
+    plt.axhline(y=5.5, color='gray', linestyle='--', label='Neutral Sentiment (5.5)')
 
     top_vol = df.nlargest(5, 'total_flights')
-    top_sent = df.nlargest(3, 'weighted_sentiment')
-    bot_sent = df.nsmallest(3, 'weighted_sentiment')
+    top_sent = df.nlargest(3, 'global_weighted_sentiment')
+    bot_sent = df.nsmallest(3, 'global_weighted_sentiment')
     
     points_to_label = pd.concat([top_vol, top_sent, bot_sent]).drop_duplicates(subset=['airport_code'])
     
     for row in points_to_label.itertuples():
-        plt.text(row.total_flights, row.weighted_sentiment, row.airport_code, fontsize=9, weight='bold')
+        plt.text(row.total_flights, row.global_weighted_sentiment, row.airport_code, fontsize=9, weight='bold')
 
     plt.tight_layout()
     output_scatter = os.path.join(OUTPUT_DIR, 'volume_vs_sentiment.png')

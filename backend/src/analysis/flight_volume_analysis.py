@@ -11,7 +11,6 @@ DELAYS_DATA_PATH = os.path.join(backend_dir, 'data', 'processed', 'delays', 'del
 
 OUTPUT_CSV = os.path.join(backend_dir, 'results', 'tables', 'airport_volume_analysis_summary.csv')
 
-
 def min_max_normalize(series):
     return (series - series.min()) / (series.max() - series.min())
 
@@ -34,24 +33,16 @@ def main():
     dep_counts = df_flights['SchedDepApt'].value_counts()
     arr_counts = df_flights['SchedArrApt'].value_counts()
     
-    all_airports = set(dep_counts.index).union(set(arr_counts.index))
+    total_volumes = dep_counts.add(arr_counts, fill_value=0).reset_index()
+    total_volumes.columns = ['airport_code', 'total_flights']
     
-    volume_data = []
-    for airport in all_airports:
-        dep = dep_counts.get(airport, 0)
-        arr = arr_counts.get(airport, 0)
-        total = dep + arr
-        volume_data.append({'airport_code': airport, 'total_flights': total})
-        
-    df_volume = pd.DataFrame(volume_data)
-    df_merged = df_sentiment.merge(df_volume, on='airport_code', how='left')
+    df_merged = df_sentiment.merge(total_volumes, on='airport_code', how='left')
     df_merged['total_flights'] = df_merged['total_flights'].fillna(0)
-    df_merged = df_merged[(df_merged['total_flights'] > 0) & (df_merged['weighted_sentiment'].notna())].copy()
+    df_merged = df_merged[(df_merged['total_flights'] > 0) & (df_merged['global_weighted_sentiment'].notna())].copy()
 
     print("Calculating Composite Score...")
     
-    df_merged['weighted_sentiment'] = df_merged['weighted_sentiment'] * 2
-    df_merged['sentiment_norm'] = min_max_normalize(df_merged['weighted_sentiment'])
+    df_merged['sentiment_norm'] = min_max_normalize(df_merged['global_weighted_sentiment'])
     df_merged['log_volume'] = np.log10(df_merged['total_flights'] + 1)
     df_merged['volume_norm'] = min_max_normalize(df_merged['log_volume'])
     
@@ -68,7 +59,7 @@ def main():
         
     print(f"Analysis complete. Results saved to: {OUTPUT_CSV}")
     print("\nTop 5 Airports by Volume-Weighted Score:")
-    print(df_merged[['airport_code', 'name', 'total_flights', 'weighted_sentiment', 'composite_score_scaled']].head())
+    print(df_merged[['airport_code', 'name', 'total_flights', 'global_weighted_sentiment', 'avg_pressure_impact', 'composite_score_scaled']].head())
 
 if __name__ == "__main__":
     main()

@@ -20,7 +20,7 @@ backend_dir = os.path.dirname(src_dir)
 
 AIRPORTS_CSV_PATH = os.path.join(backend_dir, 'data', 'processed', 'airports', 'airports_filtered.csv')
 KEYWORDS_JSON_PATH = os.path.join(backend_dir, 'config', 'keywords.json')
-OUTPUT_PATH = os.path.join(backend_dir, 'data', 'sentiment', 'news_raw_full.csv')
+OUTPUT_PATH = os.path.join(backend_dir, 'data', 'raw', 'news', 'news_raw_full.csv')
 
 print_lock = threading.Lock()
 

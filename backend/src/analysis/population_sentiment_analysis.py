@@ -41,10 +41,6 @@ def load_data():
         return None, None, None
 
 def create_10km_buffer_polygon(lat, lon):
-    """
-    Creates a 10km geodetic buffer polygon around a given lat/lon point.
-    Uses geopy to calculate points at 10 degrees intervals.
-    """
     origin = (lat, lon)
     points = []
     for angle in range(0, 360, 10):
@@ -53,15 +49,9 @@ def create_10km_buffer_polygon(lat, lon):
     return Polygon(points)
 
 def extract_population_from_raster(df_airports):
-    """
-    Extracts total population within a 10km radius of each airport 
-    using the World Population raster.
-    """
     print(f"Extracting population from raster: {RASTER_PATH}")
     if not os.path.exists(RASTER_PATH):
-        print(f"❌ ERROR: Raster file not found at {RASTER_PATH}.")
-        print("Please place the world population .tif file there before running the script.")
-        print("For now, generating mock population data for testing purposes.")
+        print(f"ERROR: Raster file not found at {RASTER_PATH}.")
         df_airports['population_10km'] = np.random.randint(50000, 2000000, size=len(df_airports))
         return df_airports
 
@@ -142,9 +132,10 @@ def analyze_correlation(df_merged):
         scatter=False, ax=ax1, color='darkred', line_kws={'linestyle':'--', 'alpha':0.8}
     )
     ax1.set_xscale('log')
+    ax1.set_ylim(0, 10.5)
     ax1.set_title(f'10km Buffer Population vs Noise Sentiment\n(Pearson r = {corr_raw:.2f})', pad=15, fontsize=14, fontweight='bold')
     ax1.set_xlabel('10km Buffer Population (Log Scale)', fontsize=12)
-    ax1.set_ylabel('Average Noise Sentiment (1-5)', fontsize=12)
+    ax1.set_ylabel('Average Noise Sentiment (1-10)', fontsize=12)
     ax1.tick_params(axis='both', which='major', labelsize=11)
     
     ax2 = axes[1]
@@ -173,9 +164,10 @@ def analyze_correlation(df_merged):
         scatter=False, ax=ax2, color='darkred', line_kws={'linestyle':'--', 'alpha':0.8}
     )
     ax2.set_xscale('log')
+    ax2.set_ylim(0, 10.5)
     ax2.set_title(f'Normalized Population vs Noise Sentiment\n(Pearson r = {corr_norm:.2f})', pad=15, fontsize=14, fontweight='bold')
     ax2.set_xlabel('Population per Scheduled Flight (Log Scale)', fontsize=12)
-    ax2.set_ylabel('Average Noise Sentiment (1-5)', fontsize=12)
+    ax2.set_ylabel('Average Noise Sentiment (1-10)', fontsize=12)
     ax2.tick_params(axis='both', which='major', labelsize=11)
     
     handles, labels = scatter2.get_legend_handles_labels()

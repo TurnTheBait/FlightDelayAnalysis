@@ -16,7 +16,7 @@ if not os.path.exists(CSV_PATH):
 
 df = pd.read_csv(CSV_PATH)
 df = df[df['total_mentions'] > 0].copy()
-global_mean_score = df['weighted_sentiment'].mean()
+global_mean_score = df['global_weighted_sentiment'].mean()
 median_volume = df['total_mentions'].median()
 
 print(f"Aeroporti analizzati: {len(df)}")
@@ -29,24 +29,10 @@ sns.set_theme(style="whitegrid")
 scatter = sns.scatterplot(
     data=df,
     x="total_mentions",
-    y="weighted_sentiment",
+    y="global_weighted_sentiment",
     size="total_mentions",
     sizes=(50, 600),
-    hue="weighted_sentiment",
-    palette="RdYlGn",  
-    alpha=0.8,
-    edgecolor="black",
-    linewidth=0.5,
-    legend=False
-)
-
-scatter = sns.scatterplot(
-    data=df,
-    x="total_mentions",
-    y="weighted_sentiment",
-    size="total_mentions",
-    sizes=(50, 600),
-    hue="weighted_sentiment",
+    hue="global_weighted_sentiment",
     palette="RdYlGn",  
     alpha=0.8,
     edgecolor="black",
@@ -56,16 +42,17 @@ scatter = sns.scatterplot(
 
 plt.axhline(y=global_mean_score, color='blue', linestyle='--', linewidth=1.5, label=f'Media Settore ({global_mean_score:.2f})')
 plt.axvline(x=median_volume, color='gray', linestyle=':', linewidth=1.5, label='Mediana Volume')
+
 texts = []
 for i, row in df.iterrows():
     
     is_high_volume = row['total_mentions'] > df['total_mentions'].quantile(0.90)
-    is_extreme_score = row['weighted_sentiment'] > 6 or row['weighted_sentiment'] < 2
+    is_extreme_score = row['global_weighted_sentiment'] > 6 or row['global_weighted_sentiment'] < 2
     
     if is_high_volume or is_extreme_score:
         plt.text(
             row['total_mentions'] + (df['total_mentions'].max() * 0.01), 
-            row['weighted_sentiment'], 
+            row['global_weighted_sentiment'], 
             row['airport_code'], 
             fontsize=9, 
             fontweight='bold', 
@@ -75,7 +62,7 @@ for i, row in df.iterrows():
 plt.title("Matrice di Affidabilità: Volume vs Sentiment\n(Verifica della veridicità dei dati)", fontsize=16, fontweight='bold')
 plt.xlabel("Volume di Dati Raccolti (News + Reddit + Skytrax)", fontsize=12)
 plt.ylabel("Sentiment Score Globale (1-10)", fontsize=12)
-plt.ylim(0, 10) 
+plt.ylim(0, 10.5) 
 
 plt.text(df['total_mentions'].max()*0.9, 9.5, "LEADER SOLIDI\n(Tanti dati, Voto alto)", 
          color='green', fontweight='bold', ha='center', bbox=dict(facecolor='white', alpha=0.7))

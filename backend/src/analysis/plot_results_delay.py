@@ -3,6 +3,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import os
 import matplotlib as mpl
+import textwrap
+import sys
 
 current_script_dir = os.path.dirname(os.path.abspath(__file__))
 backend_dir = os.path.dirname(os.path.dirname(current_script_dir))
@@ -10,7 +12,6 @@ INPUT_FILE = os.path.join(backend_dir, 'data', 'sentiment', 'sentiment_results_d
 AIRPORTS_PATH = os.path.join(backend_dir, 'data', 'processed', 'airports', 'airports_filtered.csv')
 
 src_dir = os.path.dirname(current_script_dir)
-import sys
 sys.path.append(src_dir)
 from utils.airport_utils import get_icao_to_iata_mapping
 
@@ -31,7 +32,7 @@ def main():
         print("Warning: Sentiment file is empty.")
         return
 
-    df['score_scaled'] = df['combined_score'] * 2
+    df['score_scaled'] = df['combined_score']
 
     agg_data = df.groupby('airport_code')['score_scaled'].agg(['mean', 'count']).reset_index()
 
@@ -42,7 +43,7 @@ def main():
     print(f"Aggregated table saved to: {agg_table_path}")
 
     norm = mpl.colors.Normalize(vmin=0, vmax=10)
-    cmap = mpl.cm.RdYlGn_r
+    cmap = mpl.cm.RdYlGn
     
     def get_colors(values):
         return [cmap(norm(v)) for v in values]
@@ -72,9 +73,9 @@ def main():
 
     plt.title('Delay Perception: Volume vs. Sentiment', fontsize=14, weight='bold')
     plt.xlabel('Number of Mentions', fontsize=12)
-    plt.ylabel('Average Sentiment Score (0-10)', fontsize=12)
+    plt.ylabel('Average Sentiment Score (1-10)', fontsize=12)
     plt.grid(True, linestyle='--', alpha=0.6)
-    plt.axhline(y=6, color='gray', linestyle='--', label='Neutral Threshold')
+    plt.axhline(y=5.5, color='gray', linestyle='--', label='Neutral Threshold (5.5)')
     plt.ylim(0, 10.5)
 
     output_scatter = os.path.join(OUTPUT_DIR_FIG, 'sentiment_scatter_delay.png')
@@ -83,7 +84,6 @@ def main():
 
     agg_data['rounded_score'] = agg_data['mean'].round(1)
     
-    import textwrap
     def create_label(codes):
         code_list = list(codes)
         text = ", ".join(code_list)
@@ -103,13 +103,13 @@ def main():
     colors_agg = get_colors(aggregated_scores['rounded_score'])
 
     if not aggregated_scores.empty:
-        ax_agg = sns.barplot(x='rounded_score', y='airport_code', data=aggregated_scores,hue='rounded_score', palette=colors_agg, edgecolor='black', legend=False)
+        ax_agg = sns.barplot(x='rounded_score', y='airport_code', data=aggregated_scores, hue='rounded_score', palette=colors_agg, edgecolor='black', legend=False)
 
         plt.title('Aggregated Delay Sentiment Ranking (Grouped by Score)', fontsize=16, weight='bold')
-        plt.xlabel('Sentiment Score (0-10)', fontsize=12)
+        plt.xlabel('Sentiment Score (1-10)', fontsize=12)
         plt.ylabel('Airports (Codes)', fontsize=12)
         plt.xlim(0, 10.5)
-        plt.axvline(x=6, color='black', linestyle='--', linewidth=1)
+        plt.axvline(x=5.5, color='black', linestyle='--', linewidth=1)
 
         for i, row in enumerate(aggregated_scores.itertuples()):
             ax_agg.text(row.rounded_score + 0.05, i, f"{row.rounded_score:.1f}", va='center', fontsize=10, weight='bold')

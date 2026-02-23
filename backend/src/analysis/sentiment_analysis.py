@@ -12,7 +12,7 @@ CURRENT_FILE = os.path.abspath(__file__)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(CURRENT_FILE)))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
 CONFIG_PATH = os.path.join(BASE_DIR, 'config', 'keywords.json')
-INPUT_FILE = os.path.join(DATA_DIR, 'sentiment', 'combined_data.csv')
+INPUT_FILE = os.path.join(DATA_DIR, 'merged', 'combined_data.csv')
 AIRPORTS_PATH = os.path.join(DATA_DIR, 'processed', 'airports', 'airports_filtered.csv')
 FLIGHTS_DATA_PATH = os.path.join(DATA_DIR, 'processed', 'delays', 'delays_consolidated_filtered.csv')
 
@@ -65,7 +65,7 @@ def get_dynamic_strategic_hubs(flights_path, airports_path, top_n=30):
 
 def calculate_bert_sentiment_a(text):
     if not text or pd.isna(text):
-        return 3.0
+        return 5.5
     
     inputs = tokenizer_a(str(text), return_tensors="pt", truncation=True, padding=True, max_length=512)
     with torch.no_grad():
@@ -73,12 +73,14 @@ def calculate_bert_sentiment_a(text):
     
     probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
     probs_np = probs.cpu().numpy()[0]
-    stars = sum((i + 1) * p for i, p in enumerate(probs_np))
-    return stars
+    
+    weights = [1.0, 3.25, 5.5, 7.75, 10.0]
+    score_10 = sum(weights[i] * p for i, p in enumerate(probs_np))
+    return score_10
 
 def calculate_roberta_sentiment_b(text):
     if not text or pd.isna(text):
-        return 3.0
+        return 5.5
     
     inputs = tokenizer_b(str(text), return_tensors="pt", truncation=True, padding=True, max_length=512)
     with torch.no_grad():
@@ -87,8 +89,8 @@ def calculate_roberta_sentiment_b(text):
     probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
     probs_np = probs.cpu().numpy()[0]
     
-    stars_equivalent = (probs_np[0] * 1.0) + (probs_np[1] * 3.0) + (probs_np[2] * 5.0)
-    return stars_equivalent
+    score_10 = (probs_np[0] * 1.0) + (probs_np[1] * 5.5) + (probs_np[2] * 10.0)
+    return score_10
 
 def calculate_ensemble_sentiment(text):
     score_a = calculate_bert_sentiment_a(text)
@@ -152,7 +154,7 @@ def process_dataset(df, mode, strategic_hubs, keywords=None):
     print("Calculating Ensemble Sentiment & Adaptive Weights...")
     
     for idx, row in tqdm(df_subset.iterrows(), total=len(df_subset)):
-        stars, score_a, score_b = calculate_ensemble_sentiment(row['text'])
+        score_10, score_a, score_b = calculate_ensemble_sentiment(row['text'])
         
         ap_code = row.get('airport_code', 'UNKNOWN')
         
@@ -161,17 +163,17 @@ def process_dataset(df, mode, strategic_hubs, keywords=None):
         review_count = review_counts_dict.get(ap_code, 1)
         media_pressure_index = np.log1p(review_count)
         
-        sentiment_centered = stars - 3.0
+        sentiment_centered = score_10 - 5.5
         raw_impact = sentiment_centered * media_pressure_index
-        sigmoid_val = 1 / (1 + np.exp(-0.45 * raw_impact))
+        sigmoid_val = 1 / (1 + np.exp(-0.20 * raw_impact))
         pressure_impact_score = 1 + 9 * sigmoid_val
         
         results.append({
             'model_a_score': score_a,
             'model_b_score': score_b,
-            'combined_score': stars,
+            'combined_score': score_10,
             'weight': weight,
-            'weighted_score': stars * weight,
+            'weighted_score': score_10 * weight,
             'media_pressure_index': media_pressure_index,
             'pressure_impact_score': pressure_impact_score
         })

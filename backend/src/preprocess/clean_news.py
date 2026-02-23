@@ -8,9 +8,9 @@ current_script_dir = os.path.dirname(os.path.abspath(__file__))
 src_dir = os.path.dirname(current_script_dir)
 backend_dir = os.path.dirname(src_dir)
 
-INPUT_FILE = os.path.join(backend_dir, 'data', 'sentiment', 'news_raw_full.csv')
+INPUT_FILE = os.path.join(backend_dir, 'data', 'raw', 'news', 'news_raw_full.csv')
 KEYWORDS_JSON_PATH = os.path.join(backend_dir, 'config', 'keywords.json')
-OUTPUT_FILE = os.path.join(backend_dir, 'data', 'sentiment', 'news_cleaned.csv')
+OUTPUT_FILE = os.path.join(backend_dir, 'data', 'processed', 'news', 'news_cleaned.csv')
 
 AVIATION_CONTEXT_KEYWORDS = [
     'airport', 'aeroporto', 'flughafen', 'aéroport', 'aeropuerto',
