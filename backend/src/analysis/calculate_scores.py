@@ -42,7 +42,7 @@ def main():
             media_pressure_index = np.log1p(review_count)
             
             raw_score = row.get('combined_score', 5.5)
-            score_10 = np.clip(raw_score * 1.5 + 1.0, 1.0, 10.0)
+            score_10 = np.clip(raw_score * 1.2 + 1.0, 1.0, 10.0)
             
             sentiment_centered = score_10 - 5.5
             raw_impact = sentiment_centered * weight * media_pressure_index

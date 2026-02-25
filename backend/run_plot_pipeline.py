@@ -6,6 +6,7 @@ import time
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 scripts = [
+    "src/analysis/calculate_scores.py",
     "src/analysis/summary.py",
     "src/analysis/flight_volume_analysis.py",
     "src/analysis/merge_weather_data.py",
