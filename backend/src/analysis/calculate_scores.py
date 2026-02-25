@@ -3,10 +3,42 @@ import sys
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
+from datetime import datetime
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from sentiment_analysis import calculate_time_based_weight, get_dynamic_strategic_hubs, FLIGHTS_DATA_PATH, AIRPORTS_PATH, DATA_DIR
+from sentiment_analysis import get_dynamic_strategic_hubs, FLIGHTS_DATA_PATH, AIRPORTS_PATH, DATA_DIR
+
+def calculate_time_based_weight(row_date, airport_code, strategic_hubs):
+    current_date = datetime.now()
+    
+    try:
+        dt = pd.to_datetime(row_date)
+        if pd.isna(dt): return 1.0
+    except:
+        return 1.0
+
+    if airport_code in strategic_hubs:
+        decay_days = 365 * 6.0
+    else:
+        decay_days = 365 * 8.0
+
+    plateau_days = 365 * 2
+
+    delta_days = (current_date - dt).days
+    if delta_days < 0: delta_days = 0
+    
+    if delta_days <= plateau_days:
+        return 5.0
+        
+    decay_delta = delta_days - plateau_days
+
+    if decay_delta >= decay_days:
+        weight = 1.0
+    else:
+        weight = 5.0 - (4.0 * (decay_delta / decay_days))
+    
+    return weight
 
 def main():
     print("Fetching strategic hubs...")
@@ -29,8 +61,6 @@ def main():
         
         weights = []
         weighted_scores = []
-        media_pressure_indices = []
-        pressure_impact_scores = []
         combined_scores_boosted = []
         
         print("Calculating Impact & Weights per row...")
@@ -52,14 +82,10 @@ def main():
             combined_scores_boosted.append(score_10)
             weights.append(weight)
             weighted_scores.append(score_10 * weight)
-            media_pressure_indices.append(media_pressure_index)
-            pressure_impact_scores.append(pressure_impact_score)
             
         df['combined_score'] = combined_scores_boosted
         df['weight'] = weights
         df['weighted_score'] = weighted_scores
-        df['media_pressure_index'] = media_pressure_indices
-        df['pressure_impact_score'] = pressure_impact_scores
         
         df.to_csv(output_file, index=False)
         print(f"Saved completed data to: {output_file}")

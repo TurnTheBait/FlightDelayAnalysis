@@ -16,6 +16,7 @@ scripts = [
     "src/plots/plot_results_noise.py",
     "src/plots/plot_volume_results.py",
     "src/plots/plot_delay_vs_noise.py",
+    "src/plots/plot_media_pressure_delay_vs_noise.py",
     "src/plots/plot_reliability_summary.py"
 ]
 

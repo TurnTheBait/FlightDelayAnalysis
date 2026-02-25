@@ -101,37 +101,6 @@ def calculate_ensemble_sentiment(text):
     
     return final_score, score_a, score_b
 
-def calculate_time_based_weight(row_date, airport_code, strategic_hubs):
-    current_date = datetime.now()
-    
-    try:
-        dt = pd.to_datetime(row_date)
-        if pd.isna(dt): return 1.0
-    except:
-        return 1.0
-
-    if airport_code in strategic_hubs:
-        decay_days = 365 * 6.0
-    else:
-        decay_days = 365 * 8.0
-
-    plateau_days = 365 * 2
-
-    delta_days = (current_date - dt).days
-    if delta_days < 0: delta_days = 0
-    
-    if delta_days <= plateau_days:
-        return 5.0
-        
-    decay_delta = delta_days - plateau_days
-
-    if decay_delta >= decay_days:
-        weight = 1.0
-    else:
-        weight = 5.0 - (4.0 * (decay_delta / decay_days))
-    
-    return weight
-
 def process_dataset(df, mode, strategic_hubs, keywords=None):
     print(f"\n--- Processing Mode: {mode.upper()} ---")
     

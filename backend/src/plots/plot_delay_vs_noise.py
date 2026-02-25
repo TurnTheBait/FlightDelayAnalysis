@@ -28,7 +28,6 @@ def aggregate_data(df, category):
         
     agg = df.groupby('airport_code').agg({
         'combined_score': 'mean',
-        'pressure_impact_score': 'mean',
         'text': 'count'
     }).reset_index()
     

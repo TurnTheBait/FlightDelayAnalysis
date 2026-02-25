@@ -196,7 +196,7 @@ def main():
     
     print("Merging datasets...")
     df_merged = pd.merge(df_airports_pop, df_sent_agg, on='airport_code', how='inner')
-    df_final = pd.merge(df_merged, df_volume[['airport_code', 'total_flights', 'log_volume']], on='airport_code', how='inner')
+    df_final = pd.merge(df_merged, df_volume[['airport_code', 'total_flights', 'volume_norm']], on='airport_code', how='inner')
     
     print(f"Final dataset for analysis: {len(df_final)} airports.")
     

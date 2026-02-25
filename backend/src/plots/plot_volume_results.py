@@ -24,7 +24,7 @@ def main():
     
     df['total_flights'] = pd.to_numeric(df['total_flights'], errors='coerce').fillna(0)
     df['global_weighted_sentiment'] = pd.to_numeric(df['global_weighted_sentiment'], errors='coerce')
-    df['composite_score_scaled'] = pd.to_numeric(df['composite_score_scaled'], errors='coerce')
+    df['composite_score'] = pd.to_numeric(df['composite_score'], errors='coerce')
     
     norm = mpl.colors.Normalize(vmin=0, vmax=10)
     cmap = mpl.cm.RdYlGn
@@ -33,7 +33,7 @@ def main():
         return [cmap(norm(v)) for v in values]
     
     top_n = 15
-    df_sorted = df.sort_values('composite_score_scaled', ascending=False)
+    df_sorted = df.sort_values('composite_score', ascending=False)
     
     top_airports = df_sorted.head(top_n)
     bottom_airports = df_sorted.tail(top_n)
@@ -42,28 +42,28 @@ def main():
     
     plt.subplot(1, 2, 1)
 
-    colors_top = get_colors(top_airports['composite_score_scaled'])
-    sns.barplot(x='composite_score_scaled', y='airport_code', hue='airport_code', data=top_airports, palette=colors_top, edgecolor='black', legend=False)
+    colors_top = get_colors(top_airports['composite_score'])
+    sns.barplot(x='composite_score', y='airport_code', hue='airport_code', data=top_airports, palette=colors_top, edgecolor='black', legend=False)
     plt.title(f'Top {top_n} Airports by Composite Score\n(Volume + Sentiment)', fontsize=14, weight='bold')
     plt.xlabel('Composite Score (0-10)')
     plt.ylabel('Airport Code')
     plt.xlim(0, 10.5)
     
     for i, row in enumerate(top_airports.itertuples()):
-        label = f"{row.composite_score_scaled:.1f} (Vol: {int(row.total_flights)})"
-        plt.text(row.composite_score_scaled + 0.1, i, label, va='center', fontsize=9, weight='bold')
+        label = f"{row.composite_score:.1f} (Vol: {int(row.total_flights)})"
+        plt.text(row.composite_score + 0.1, i, label, va='center', fontsize=9, weight='bold')
 
     plt.subplot(1, 2, 2)
-    colors_bottom = get_colors(bottom_airports['composite_score_scaled'])
-    sns.barplot(x='composite_score_scaled', y='airport_code', hue='airport_code', data=bottom_airports, palette=colors_bottom, edgecolor='black', legend=False)
+    colors_bottom = get_colors(bottom_airports['composite_score'])
+    sns.barplot(x='composite_score', y='airport_code', hue='airport_code', data=bottom_airports, palette=colors_bottom, edgecolor='black', legend=False)
     plt.title(f'Bottom {top_n} Airports by Composite Score', fontsize=14, weight='bold')
     plt.xlabel('Composite Score (0-10)')
     plt.ylabel('')
     plt.xlim(0, 10.5)
 
     for i, row in enumerate(bottom_airports.itertuples()):
-        label = f"{row.composite_score_scaled:.1f} (Vol: {int(row.total_flights)})"
-        plt.text(row.composite_score_scaled + 0.1, i, label, va='center', fontsize=9, weight='bold')
+        label = f"{row.composite_score:.1f} (Vol: {int(row.total_flights)})"
+        plt.text(row.composite_score + 0.1, i, label, va='center', fontsize=9, weight='bold')
 
     plt.tight_layout()
     output_ranking = os.path.join(OUTPUT_DIR, 'composite_score_ranking.png')
@@ -77,7 +77,7 @@ def main():
         x='total_flights', 
         y='global_weighted_sentiment', 
         size='total_mentions', 
-        hue='composite_score_scaled', 
+        hue='composite_score', 
         sizes=(20, 500), 
         palette='RdYlGn', 
         hue_norm=(0, 10),
@@ -108,7 +108,7 @@ def main():
     plt.savefig(output_scatter, dpi=300)
     print(f"Scatter plot saved to: {output_scatter}")
     
-    df['rounded_score'] = df['composite_score_scaled'].round(1)
+    df['rounded_score'] = df['composite_score'].round(1)
     
     def create_label(codes):
         code_list = list(codes)
@@ -120,7 +120,7 @@ def main():
 
     aggregated_wa = df.groupby('rounded_score').agg({
         'airport_code': create_label,
-        'composite_score_scaled': 'mean' 
+        'composite_score': 'mean' 
     }).reset_index()
     
     aggregated_wa = aggregated_wa.sort_values('rounded_score', ascending=False)
