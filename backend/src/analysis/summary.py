@@ -68,13 +68,7 @@ def main():
     summary = summary.merge(counts_delay, on='airport_code', how='left')
     summary = summary.merge(counts_noise, on='airport_code', how='left')
     
-    for col in ['general_reviews_count', 'delay_reviews_count', 'noise_reviews_count']:
-        summary[col] = summary[col].fillna(0)
-    summary['media_pressure_index'] = np.log1p(
-        summary['general_reviews_count'] + 
-        summary['delay_reviews_count'] + 
-        summary['noise_reviews_count']
-    )
+    summary['media_pressure_index'] = np.log1p(summary['general_reviews_count'])
     summary['media_pressure_index_delay'] = np.log1p(summary['delay_reviews_count'])
     summary['media_pressure_index_noise'] = np.log1p(summary['noise_reviews_count'])
 
