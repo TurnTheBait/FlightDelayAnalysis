@@ -42,13 +42,21 @@ def main():
 
     print("Calculating Composite Score...")
     
+    import scipy.stats as stats
+    
     df_merged['sentiment_norm'] = min_max_normalize(df_merged['global_weighted_sentiment'])
     df_merged['volume_norm'] = min_max_normalize(np.log10(df_merged['total_flights'] + 1))
     
-    w_sentiment = 0.5
-    w_volume = 0.5
+    volume_modifier = (df_merged['volume_norm'] - 0.6) * 2.5 
+    weight = 1.2
+    volume_multiplier = 1.0 + (volume_modifier * weight) 
     
-    df_merged['composite_score'] = (df_merged['sentiment_norm'] * w_sentiment) + (df_merged['volume_norm'] * w_volume) * 10
+    raw_composite = (df_merged['global_weighted_sentiment']) * volume_multiplier
+    
+    z_scores = stats.zscore(raw_composite)
+    scaled = 5.0 + (z_scores * 1.5)
+    
+    df_merged['composite_score'] = np.clip(scaled, 1.0, 10.0)
     
     df_merged = df_merged.sort_values('composite_score', ascending=False)
     
