@@ -1,0 +1,84 @@
+import {
+    loadNoisePopulationData,
+    loadNoiseAggregated,
+} from "@/lib/csv";
+import NoisePopulationScatter from "@/components/charts/NoisePopulationScatter";
+import NoiseRankingChart from "@/components/charts/NoiseRankingChart";
+
+export default function NoisePage() {
+    const population = loadNoisePopulationData();
+    const noiseAgg = loadNoiseAggregated();
+
+    const avgNoiseSentiment =
+        population.reduce((sum, a) => sum + a.avg_sentiment, 0) /
+        population.length;
+
+    const highestPop = [...population].sort(
+        (a, b) => b.population_10km - a.population_10km
+    )[0];
+
+    const lowestSentiment = [...population].sort(
+        (a, b) => a.avg_sentiment - b.avg_sentiment
+    )[0];
+
+    const top15Noise = [...noiseAgg].sort((a, b) => b.mean - a.mean).slice(0, 15);
+
+    return (
+        <>
+            <header className="page-header">
+                <h1 className="page-header__title">Noise & Population</h1>
+                <p className="page-header__subtitle">
+                    Analyzing the relationship between airport noise sentiment and the
+                    population living within a 10km radius, calculated using WorldPop
+                    GeoTIFF raster data.
+                </p>
+            </header>
+
+            <div className="kpi-row">
+                <div className="kpi-card">
+                    <div className="kpi-card__label">Avg Noise Sentiment</div>
+                    <div className="kpi-card__value">{avgNoiseSentiment.toFixed(2)}</div>
+                    <div className="kpi-card__sub">Across {population.length} airports</div>
+                </div>
+                <div className="kpi-card">
+                    <div className="kpi-card__label">Highest Population Exposure</div>
+                    <div className="kpi-card__value">{highestPop.airport_code}</div>
+                    <div className="kpi-card__sub">
+                        {Math.round(highestPop.population_10km).toLocaleString()} residents
+                    </div>
+                </div>
+                <div className="kpi-card">
+                    <div className="kpi-card__label">Lowest Noise Sentiment</div>
+                    <div className="kpi-card__value">
+                        {lowestSentiment.airport_code}
+                    </div>
+                    <div className="kpi-card__sub">
+                        Score: {lowestSentiment.avg_sentiment.toFixed(2)}
+                    </div>
+                </div>
+            </div>
+
+            <div className="bento-grid">
+                <div className="bento-grid__item col-span-4">
+                    <div className="card-title">
+                        Noise Sentiment{" "}
+                        <span className="card-title__accent">
+                            vs. Population Exposure
+                        </span>
+                    </div>
+                    <NoisePopulationScatter data={population} />
+                </div>
+
+                <div className="bento-grid__item col-span-2">
+                    <div className="card-title">
+                        Top 15{" "}
+                        <span className="card-title__accent">
+                            by Noise Review Sentiment
+                        </span>
+                    </div>
+                    <NoiseRankingChart data={top15Noise} />
+                </div>
+            </div>
+        </>
+    );
+}
