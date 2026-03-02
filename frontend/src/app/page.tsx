@@ -11,12 +11,12 @@ export default function HomePage() {
     airports.length;
   const totalReviews = airports.reduce((sum, a) => sum + a.total_mentions, 0);
   const avgPressure =
-    airports.reduce((sum, a) => sum + a.pressure_index, 0) / airports.length;
+    airports.reduce((sum, a) => sum + a.media_pressure_index, 0) / airports.length;
 
   const scatterData = airports.map((a) => ({
     airport_code: a.airport_code,
     name: a.name,
-    pressure_index: a.pressure_index,
+    pressure_index: a.media_pressure_index,
     global_weighted_sentiment: a.global_weighted_sentiment,
     total_mentions: a.total_mentions,
   }));
@@ -49,7 +49,7 @@ export default function HomePage() {
   const pressureDistData = buckets.map((b) => ({
     label: b.label,
     count: airports.filter(
-      (a) => a.pressure_index >= b.min && a.pressure_index < b.max
+      (a) => a.media_pressure_index >= b.min && a.media_pressure_index < b.max
     ).length,
   }));
 

@@ -1,27 +1,34 @@
-import {
-    loadNoisePopulationData,
-    loadNoiseAggregated,
-} from "@/lib/csv";
+import { loadAirportSummary, loadNoisePopulationData } from "@/lib/csv";
 import NoisePopulationScatter from "@/components/charts/NoisePopulationScatter";
 import NoiseRankingChart from "@/components/charts/NoiseRankingChart";
 
 export default function NoisePage() {
+    const allAirports = loadAirportSummary();
+    const airports = allAirports.filter(
+        (a) => a.noise_weighted_sentiment != null && a.noise_reviews_count != null
+    );
     const population = loadNoisePopulationData();
-    const noiseAgg = loadNoiseAggregated();
 
     const avgNoiseSentiment =
-        population.reduce((sum, a) => sum + a.avg_sentiment, 0) /
-        population.length;
+        airports.reduce((sum, a) => sum + a.noise_weighted_sentiment!, 0) /
+        airports.length;
 
     const highestPop = [...population].sort(
         (a, b) => b.population_10km - a.population_10km
     )[0];
 
-    const lowestSentiment = [...population].sort(
-        (a, b) => a.avg_sentiment - b.avg_sentiment
+    const lowestSentiment = [...airports].sort(
+        (a, b) => a.noise_weighted_sentiment! - b.noise_weighted_sentiment!
     )[0];
 
-    const top15Noise = [...noiseAgg].sort((a, b) => b.mean - a.mean).slice(0, 15);
+    const top15Noise = [...airports]
+        .sort((a, b) => b.noise_weighted_sentiment! - a.noise_weighted_sentiment!)
+        .slice(0, 15)
+        .map((a) => ({
+            airport_code: a.airport_code,
+            mean: a.noise_weighted_sentiment!,
+            count: a.noise_reviews_count!,
+        }));
 
     return (
         <>
@@ -38,7 +45,7 @@ export default function NoisePage() {
                 <div className="kpi-card">
                     <div className="kpi-card__label">Avg Noise Sentiment</div>
                     <div className="kpi-card__value">{avgNoiseSentiment.toFixed(2)}</div>
-                    <div className="kpi-card__sub">Across {population.length} airports</div>
+                    <div className="kpi-card__sub">Across {airports.length} airports</div>
                 </div>
                 <div className="kpi-card">
                     <div className="kpi-card__label">Highest Population Exposure</div>
@@ -53,7 +60,7 @@ export default function NoisePage() {
                         {lowestSentiment.airport_code}
                     </div>
                     <div className="kpi-card__sub">
-                        Score: {lowestSentiment.avg_sentiment.toFixed(2)}
+                        Score: {lowestSentiment.noise_weighted_sentiment!.toFixed(2)}
                     </div>
                 </div>
             </div>

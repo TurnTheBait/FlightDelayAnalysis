@@ -7,15 +7,14 @@ export interface AirportSummary {
     reddit_count: number;
     skytrax_count: number;
     total_mentions: number;
+    delay_reviews_count: number | null;
+    noise_reviews_count: number | null;
+    media_pressure_index: number;
+    media_pressure_index_delay: number | null;
+    media_pressure_index_noise: number | null;
     global_weighted_sentiment: number;
-    pressure_index: number;
-    global_pressure_sentiment: number;
-}
-
-export interface DelayAggregated {
-    airport_code: string;
-    mean: number;
-    count: number;
+    delay_weighted_sentiment: number | null;
+    noise_weighted_sentiment: number | null;
 }
 
 export interface WeatherLaggedEvent {
@@ -44,10 +43,4 @@ export interface NoiseSentimentPopulation {
     name: string;
     avg_sentiment: number;
     population_10km: number;
-}
-
-export interface NoiseAggregated {
-    airport_code: string;
-    mean: number;
-    count: number;
 }

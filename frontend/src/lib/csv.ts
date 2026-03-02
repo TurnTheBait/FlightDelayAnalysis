@@ -3,10 +3,8 @@ import path from "path";
 import Papa from "papaparse";
 import type {
     AirportSummary,
-    DelayAggregated,
     WeatherLaggedEvent,
     NoiseSentimentPopulation,
-    NoiseAggregated,
     CorrelationMatrix,
 } from "./types";
 
@@ -31,10 +29,6 @@ function loadCSV<T>(relativePath: string): T[] {
 
 export function loadAirportSummary(): AirportSummary[] {
     return loadCSV<AirportSummary>("airport_analysis_summary.csv");
-}
-
-export function loadDelayData(): DelayAggregated[] {
-    return loadCSV<DelayAggregated>("delay/sentiment_aggregated_delay.csv");
 }
 
 export function loadWeatherData(): WeatherLaggedEvent[] {
@@ -62,8 +56,4 @@ export function loadNoisePopulationData(): NoiseSentimentPopulation[] {
     return loadCSV<NoiseSentimentPopulation>(
         "noise_sentiment_10km_population.csv"
     );
-}
-
-export function loadNoiseAggregated(): NoiseAggregated[] {
-    return loadCSV<NoiseAggregated>("noise/sentiment_aggregated_noise.csv");
 }
