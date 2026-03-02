@@ -24,6 +24,20 @@ def get_counts(path, col_name):
     counts = df.groupby('airport_code').size().reset_index(name=col_name)
     return counts
 
+def get_weighted_sentiment(path, col_name):
+    if not os.path.exists(path):
+        return pd.DataFrame(columns=['airport_code', col_name])
+    df = pd.read_csv(path)
+    if 'weight' not in df.columns or 'combined_score' not in df.columns:
+        return pd.DataFrame(columns=['airport_code', col_name])
+    
+    stats = df.groupby('airport_code').apply(
+        lambda x: pd.Series({
+            col_name: calculate_weighted_average(x, 'combined_score', 'weight', fallback_to_mean=True)
+        })
+    ).reset_index()
+    return stats
+
 def main():
     if not os.path.exists(GENERAL_DATA_PATH):
         print(f"ERRORE: Non trovo {GENERAL_DATA_PATH}")
@@ -58,6 +72,11 @@ def main():
         })
     ).reset_index()
 
+    print("Calcolo sentiment pesato per delay e noise...")
+    delay_sentiment = get_weighted_sentiment(DELAY_DATA_PATH, 'delay_weighted_sentiment')
+    noise_sentiment = get_weighted_sentiment(NOISE_DATA_PATH, 'noise_weighted_sentiment')
+
+
     icao_to_iata = get_icao_to_iata_mapping(AIRPORTS_PATH)
     df_airports['airport_code'] = df_airports['ident'].map(icao_to_iata).fillna(df_airports['ident'])
     summary = df_airports[['airport_code', 'name', 'iso_country', 'municipality']].drop_duplicates('airport_code').copy()
@@ -67,6 +86,8 @@ def main():
     summary = summary.merge(counts_general, on='airport_code', how='left')
     summary = summary.merge(counts_delay, on='airport_code', how='left')
     summary = summary.merge(counts_noise, on='airport_code', how='left')
+    summary = summary.merge(delay_sentiment, on='airport_code', how='left')
+    summary = summary.merge(noise_sentiment, on='airport_code', how='left')
     
     summary['media_pressure_index'] = np.log1p(summary['general_reviews_count'])
     summary['media_pressure_index_delay'] = np.log1p(summary['delay_reviews_count'])
@@ -79,7 +100,7 @@ def main():
         'google_news_count', 'reddit_count', 'skytrax_count',
         'total_mentions', 'delay_reviews_count', 'noise_reviews_count', 
         'media_pressure_index', 'media_pressure_index_delay', 'media_pressure_index_noise',
-        'global_weighted_sentiment', 
+        'global_weighted_sentiment', 'delay_weighted_sentiment', 'noise_weighted_sentiment'
     ]
     
     for c in expected_cols:

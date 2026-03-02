@@ -37,9 +37,6 @@ def main():
     agg_data = df.groupby('airport_code')['score_scaled'].agg(['mean', 'count']).reset_index()
     agg_data = agg_data.sort_values('mean', ascending=False)
 
-    agg_table_path = os.path.join(OUTPUT_DIR_TAB, 'sentiment_aggregated_noise.csv')
-    agg_data.to_csv(agg_table_path, index=False)
-    print(f"Aggregated table saved to: {agg_table_path}")
 
     norm = mpl.colors.Normalize(vmin=0, vmax=10)
     cmap = mpl.cm.RdYlGn
