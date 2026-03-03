@@ -60,7 +60,7 @@ def generate_map():
         
         print(f"Extracting European population grid for background heatmap...")
         try:
-            europe_bounds = (-25, 34, 45, 72)
+            europe_bounds = (-15, 34, 45, 72)
             with rasterio.open(POPULATION_TIF_PATH) as src:
                 window = from_bounds(*europe_bounds, src.transform)
                 
@@ -86,6 +86,14 @@ def generate_map():
                 
                 for r, c in zip(y_indices, x_indices):
                     lon, lat = rasterio.transform.xy(transform, r, c, offset='center')
+                    
+                    if lat < 34.0:
+                        continue
+                    if lat < 37.5 and -2.0 < lon < 11.5:
+                        continue
+                    if lat < 36.0 and lon < -2.0:
+                        continue
+
                     heatmap_lats.append(lat)
                     heatmap_lons.append(lon)
                     heatmap_pops.append(data[r, c])
@@ -141,11 +149,22 @@ def generate_map():
 
     if not heatmap_df.empty:
         heat_data = heatmap_df[['latitude_deg', 'longitude_deg', 'population']].values.tolist()
+        percentile_98 = np.percentile(heatmap_df['population'], 98)
+        max_pop = percentile_98 * 1.5 
     else:
         heat_data = airports_df[airports_df['population'] > 0][['latitude_deg', 'longitude_deg', 'population']].values.tolist()
+        percentile_98 = np.percentile(airports_df['population'], 98) if not airports_df.empty else 1
+        max_pop = percentile_98 * 1.5
         
     if heat_data:
-        HeatMap(heat_data, name="Population Density", radius=15, blur=10, max_zoom=14).add_to(m)
+        HeatMap(
+            heat_data, 
+            name="Population Density", 
+            radius=8,
+            blur=6,
+            max_zoom=14,
+            max_val=float(max_pop)
+        ).add_to(m)
 
     max_flights = airports_df['flight_count'].max()
     min_size = 10
