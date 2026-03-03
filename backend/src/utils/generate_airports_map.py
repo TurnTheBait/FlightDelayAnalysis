@@ -5,6 +5,7 @@ import os
 import sys
 import numpy as np
 import rasterio
+from rasterio.windows import from_bounds
 
 current_script_dir = os.path.dirname(os.path.abspath(__file__))
 src_dir = os.path.dirname(current_script_dir)
@@ -14,9 +15,7 @@ AIRPORTS_CSV_PATH = os.path.join(backend_dir, 'data', 'processed', 'airports', '
 RAW_AIRPORTS_CSV_PATH = os.path.join(backend_dir, 'data', 'raw', 'airports', 'airports.csv')
 DELAYS_CSV_PATH = os.path.join(backend_dir, 'data', 'processed', 'delays', 'delays_consolidated_filtered.csv')
 POPULATION_TIF_PATH = os.path.join(backend_dir, 'data', 'raw', 'population', 'global_pop_2026_CN_1km_R2025A_UA_v1.tif')
-SENTIMENT_SUMMARY_PATH = os.path.join(backend_dir, 'results', 'tables', 'airport_volume_analysis_summary.csv')
-SENTIMENT_DELAY_PATH = os.path.join(backend_dir, 'results', 'tables', 'delay', 'sentiment_aggregated_delay.csv')
-SENTIMENT_NOISE_PATH = os.path.join(backend_dir, 'results', 'tables', 'noise', 'sentiment_aggregated_noise.csv')
+SENTIMENT_SUMMARY_PATH = os.path.join(backend_dir, 'results', 'tables', 'airport_analysis_summary.csv')
 OUTPUT_HTML_PATH = os.path.join(backend_dir, 'results', 'figures', 'airports_map.html')
 
 def generate_map():
@@ -61,7 +60,6 @@ def generate_map():
         
         print(f"Extracting European population grid for background heatmap...")
         try:
-            from rasterio.windows import from_bounds
             europe_bounds = (-25, 34, 45, 72)
             with rasterio.open(POPULATION_TIF_PATH) as src:
                 window = from_bounds(*europe_bounds, src.transform)
@@ -122,35 +120,20 @@ def generate_map():
     print("Loading sentiment data...")
     if os.path.exists(SENTIMENT_SUMMARY_PATH):
         df_summary = pd.read_csv(SENTIMENT_SUMMARY_PATH)
-        if 'weighted_sentiment' in df_summary.columns:
-            df_summary = df_summary.rename(columns={'weighted_sentiment': 'global_sentiment'})
-        elif 'global_sentiment' not in df_summary.columns:
-            df_summary['global_sentiment'] = None
-            
-        cols_to_merge = ['airport_code', 'global_sentiment'] if 'global_sentiment' in df_summary.columns else ['airport_code']
-        airports_df = pd.merge(airports_df, df_summary[cols_to_merge], 
+        cols_to_merge = [
+            'airport_code', 
+            'global_weighted_sentiment', 
+            'delay_weighted_sentiment', 
+            'noise_weighted_sentiment',
+            'media_pressure_index'
+        ]
+        available_cols = [c for c in cols_to_merge if c in df_summary.columns]
+        
+        airports_df = pd.merge(airports_df, df_summary[available_cols], 
                                left_on='iata_code', right_on='airport_code', how='left')
-        if 'global_sentiment' not in airports_df.columns:
-            airports_df['global_sentiment'] = None
     else:
-        airports_df['global_sentiment'] = None
+        print(f"Warning: Summary file not found at {SENTIMENT_SUMMARY_PATH}")
 
-    if os.path.exists(SENTIMENT_DELAY_PATH):
-        df_delay = pd.read_csv(SENTIMENT_DELAY_PATH)
-        df_delay = df_delay.rename(columns={'mean': 'sentiment_delay'})
-        airports_df = pd.merge(airports_df, df_delay[['airport_code', 'sentiment_delay']], 
-                               left_on='iata_code', right_on='airport_code', how='left')
-    else:
-        airports_df['sentiment_delay'] = None
-
-    if os.path.exists(SENTIMENT_NOISE_PATH):
-        df_noise = pd.read_csv(SENTIMENT_NOISE_PATH)
-        df_noise = df_noise.rename(columns={'mean': 'sentiment_noise'})
-        airports_df = pd.merge(airports_df, df_noise[['airport_code', 'sentiment_noise']], 
-                               left_on='iata_code', right_on='airport_code', how='left')
-    else:
-        airports_df['sentiment_noise'] = None
-    
     europe_center = [54.5260, 15.2551] 
     
     print("Generating Folium map...")
@@ -184,9 +167,10 @@ def generate_map():
         def fmt_score(val):
             return f"{val:.1f}" if pd.notnull(val) else "N/A"
 
-        pop_sent_overall = fmt_score(row.get('global_sentiment'))
-        pop_sent_delay = fmt_score(row.get('sentiment_delay'))
-        pop_sent_noise = fmt_score(row.get('sentiment_noise'))
+        pop_sent_overall = fmt_score(row.get('global_weighted_sentiment'))
+        pop_sent_delay = fmt_score(row.get('delay_weighted_sentiment'))
+        pop_sent_noise = fmt_score(row.get('noise_weighted_sentiment'))
+        pressure_idx = fmt_score(row.get('media_pressure_index'))
 
         popup_text = f"""
         <div style="font-family: Arial; font-size: 13px; width: 220px;">
@@ -194,11 +178,12 @@ def generate_map():
             <hr style="margin: 5px 0;">
             <b>Flights:</b> {int(flights)}<br>
             <b>Population:</b> {int(row['population']):,}<br>
+            <b>Media Pressure:</b> {pressure_idx}<br>
             <br>
-            <b>Sentiment (0-10):</b><br>
-            • Overall: <b>{pop_sent_overall}</b><br>
-            • Delay: <b>{pop_sent_delay}</b><br>
-            • Noise: <b>{pop_sent_noise}</b>
+            <b>Sentiment (1-10):</b><br>
+            &bull; Overall: <b>{pop_sent_overall}</b><br>
+            &bull; Delay: <b>{pop_sent_delay}</b><br>
+            &bull; Noise: <b>{pop_sent_noise}</b>
         </div>
         """
 
@@ -230,4 +215,3 @@ def generate_map():
     
 if __name__ == "__main__":
     generate_map()
-
