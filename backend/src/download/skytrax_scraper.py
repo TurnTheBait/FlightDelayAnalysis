@@ -1,4 +1,5 @@
 import requests
+import cloudscraper
 from bs4 import BeautifulSoup
 import pandas as pd
 import time
@@ -162,7 +163,6 @@ def get_year_from_date(date_str):
         return None
 
 all_reviews = []
-
 print(f"\nStarting scraping for {len(df_airports)} target airports using PAGINATION...")
 
 for index, row in df_airports.iterrows():
@@ -176,86 +176,115 @@ for index, row in df_airports.iterrows():
 
     base_url = f"https://www.airlinequality.com/airport-reviews/{slug}/"
     print(f"[{index+1}/{len(df_airports)}] {code}: Scrape target -> {base_url}")
+
+    scraper = cloudscraper.create_scraper(browser={'browser': 'chrome', 'platform': 'windows', 'mobile': False})
     
     page_num = 1
     reviews_count_airport = 0
     keep_scraping = True
-    
+
     while keep_scraping:
         page_url = f"{base_url}page/{page_num}/?sortby=post_date%3ADesc&pagesize=100"
-        
-        try:
-            response = requests.get(page_url, headers=headers, timeout=15)
-            
-            if response.status_code == 200:
-                soup = BeautifulSoup(response.content, 'lxml')
-                articles = soup.find_all("article", itemprop="review")
-                
-                if not articles:
-                    articles = soup.find_all("article", class_="comp_media-review-rated")
-                
-                if not articles:
-                    keep_scraping = False
-                    break
-                
-                reviews_on_page = 0
-                for article in articles:
-                    try:
-                        date_element = article.find("time", itemprop="datePublished")
-                        date_text = date_element["datetime"] if date_element else ""
-                        
-                        review_year = get_year_from_date(date_text)
-                        
-                        if review_year and review_year < MIN_YEAR:
-                            keep_scraping = False
-                            break
-                        
-                        if review_year not in ACCEPTED_YEARS:
-                            continue
 
-                        title_element = article.find("h2", class_="text_header")
-                        review_title = title_element.get_text(strip=True) if title_element else ""
-                        
-                        content_element = article.find("div", class_="text_content")
-                        if content_element:
-                            review_text = content_element.get_text(strip=True)
-                            for trash in ["✅ Trip Verified |", "Not Verified |", "cTrip Verified |", "Trip Verified |"]:
-                                review_text = review_text.replace(trash, "")
-                            review_text = review_text.strip()
-                        else:
-                            review_text = ""
-                        
-                        rating = "N/A"
-                        rating_element = article.find("span", itemprop="ratingValue")
-                        if rating_element:
-                            rating = rating_element.get_text(strip=True)
-                        
-                        all_reviews.append({
-                            "airport_code": code,
-                            "search_term": city,
-                            "source": "Skytrax",
-                            "title": review_title,
-                            "text": f"{review_title}. {review_text}",
-                            "rating": rating,
-                            "date": date_text
-                        })
-                        reviews_count_airport += 1
-                        reviews_on_page += 1
-                    except:
+        try:
+            max_retries = 5
+            articles = []
+            response = None
+            for attempt in range(max_retries):
+                try:
+                    if attempt > 0:
+                        scraper = cloudscraper.create_scraper(browser={'browser': 'chrome', 'platform': 'windows', 'mobile': False})
+                        wait_time = 5 * attempt
+                        print(f"   [Retry {attempt}/{max_retries-1}] Waiting {wait_time}s before retrying...")
+                        time.sleep(wait_time)
+
+                    response = scraper.get(page_url, timeout=20)
+
+                    if response.status_code != 200:
+                        print(f"   [Attempt {attempt+1}] Status {response.status_code}. Retrying...")
                         continue
-                
-                print(f"   Page {page_num}: Found {reviews_on_page} relevant reviews.")
-                page_num += 1
-                time.sleep(random.uniform(0.5, 1.0))
-                
-            else:
+
+                    soup = BeautifulSoup(response.content, 'lxml')
+                    articles = soup.find_all("article", itemprop="review")
+                    if not articles:
+                        articles = soup.find_all("article", class_="comp_media-review-rated")
+
+                    if page_num == 1 and len(articles) < 10 and attempt < max_retries - 1:
+                        print(f"   [Attempt {attempt+1}] Only {len(articles)} articles on page 1 — likely throttled. Retrying...")
+                        articles = []
+                        continue
+
+                    break
+
+                except Exception as e:
+                    print(f"   [Attempt {attempt+1}] Request error: {e}")
+                    continue
+
+            if response is None or response.status_code != 200:
+                print(f"   Failed to fetch page {page_num} after {max_retries} attempts.")
                 keep_scraping = False
-        
+                continue
+
+            if not articles:
+                keep_scraping = False
+                break
+
+            reviews_on_page = 0
+            for article in articles:
+                try:
+                    date_element = article.find("time", itemprop="datePublished")
+                    date_text = date_element["datetime"] if date_element else ""
+
+                    review_year = get_year_from_date(date_text)
+
+                    if review_year and review_year < MIN_YEAR:
+                        keep_scraping = False
+                        break
+
+                    if review_year not in ACCEPTED_YEARS:
+                        continue
+
+                    title_element = article.find("h2", class_="text_header")
+                    review_title = title_element.get_text(strip=True) if title_element else ""
+
+                    content_element = article.find("div", class_="text_content")
+                    if content_element:
+                        review_text = content_element.get_text(strip=True)
+                        for trash in ["✅ Trip Verified |", "Not Verified |", "cTrip Verified |", "Trip Verified |"]:
+                            review_text = review_text.replace(trash, "")
+                        review_text = review_text.strip()
+                    else:
+                        review_text = ""
+
+                    rating = "N/A"
+                    rating_element = article.find("span", itemprop="ratingValue")
+                    if rating_element:
+                        rating = rating_element.get_text(strip=True)
+
+                    all_reviews.append({
+                        "airport_code": code,
+                        "search_term": city,
+                        "source": "Skytrax",
+                        "title": review_title,
+                        "text": f"{review_title}. {review_text}",
+                        "rating": rating,
+                        "date": date_text
+                    })
+                    reviews_count_airport += 1
+                    reviews_on_page += 1
+                except:
+                    continue
+
+            print(f"   Page {page_num}: Found {reviews_on_page} relevant reviews.")
+            page_num += 1
+            time.sleep(random.uniform(1.0, 2.5))
+
         except Exception as e:
             print(f"   Error on page {page_num}: {e}")
             keep_scraping = False
-            
+
     print(f"   Total extracted for {code}: {reviews_count_airport}")
+    time.sleep(random.uniform(2.0, 4.0))
 
 df_reviews = pd.DataFrame(all_reviews)
 os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
