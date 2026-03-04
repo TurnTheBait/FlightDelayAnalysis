@@ -109,7 +109,7 @@ def fetch_feed_with_retry(url, retries=3, delay=2, code="UNK"):
 
 def process_airport(row, keywords_dict, current_idx, total_count):
     if shutdown_event.is_set():
-        return []
+        return None
 
     full_name = str(row['name'])
     code = row['ident']
@@ -139,7 +139,7 @@ def process_airport(row, keywords_dict, current_idx, total_count):
     with tqdm(total=len(all_phrases), desc=f"[{code}]", leave=False, disable=True) as pbar:
         for category, phrase in all_phrases:
             if shutdown_event.is_set():
-                break
+                return None
 
             query = f"{city_name} {phrase} after:2015-01-01"
             encoded_query = urllib.parse.quote(query)
@@ -182,6 +182,19 @@ def process_airport(row, keywords_dict, current_idx, total_count):
             
             time.sleep(random.uniform(1.0, 2.0))
 
+    if not airport_news and not shutdown_event.is_set():
+        airport_news.append({
+            "airport_code": code,
+            "search_term": city_name,
+            "full_name": full_name,
+            "category": "NONE",
+            "keyword_used": "NONE",
+            "title": "NO_DATA",
+            "link": "NO_DATA",
+            "published": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "source": "NO_DATA"
+        })
+
     if not shutdown_event.is_set():
         with print_lock:
              print(f"   [{code}] DONE. Saved {len(airport_news)} articles.")
@@ -213,7 +226,7 @@ def main():
         for future in concurrent.futures.as_completed(future_to_airport):
             try:
                 data = future.result()
-                if data:
+                if data is not None:
                     all_news.extend(data)
             except Exception as exc:
                 pass

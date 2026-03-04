@@ -23,6 +23,7 @@ KEYWORDS_JSON_PATH = os.path.join(backend_dir, 'config', 'keywords.json')
 OUTPUT_PATH = os.path.join(backend_dir, 'data', 'raw', 'news', 'news_raw_full.csv')
 
 print_lock = threading.Lock()
+shutdown_event = threading.Event()
 
 COUNTRY_CONFIG = {
     'IT': {'lang_key': 'IT', 'gl': 'IT', 'hl': 'it-IT', 'ceid': 'IT:it'},
@@ -80,9 +81,15 @@ def get_config_for_country(iso_code):
     return COUNTRY_CONFIG.get(str(iso_code).upper(), DEFAULT_CONFIG)
 
 def fetch_feed_with_retry(url, retries=5, delay=5, code="UNK"):
+    if shutdown_event.is_set():
+        return None
+
     scraper = cloudscraper.create_scraper()
 
     for attempt in range(retries):
+        if shutdown_event.is_set():
+            return None
+
         try:
             response = scraper.get(url, timeout=30)
             
@@ -99,6 +106,14 @@ def fetch_feed_with_retry(url, retries=5, delay=5, code="UNK"):
                  return None
 
         except Exception as e:
+             error_str = str(e)
+             if "NameResolutionError" in error_str or "nodename nor servname" in error_str:
+                 if not shutdown_event.is_set():
+                     with print_lock:
+                         print(f"\n[CRITICAL] DNS/Network Error detected on {code}. Stopping scraper to prevent spam.")
+                     shutdown_event.set()
+                 return None
+
              if attempt < retries - 1:
                  wait_time = delay * (2 ** attempt)
                  time.sleep(wait_time)
@@ -109,6 +124,9 @@ def fetch_feed_with_retry(url, retries=5, delay=5, code="UNK"):
     return None
 
 def process_airport(row, keywords_dict):
+    if shutdown_event.is_set():
+        return None
+
     full_name = str(row['name'])
     code = row['ident']
     iso_country = str(row['iso_country'])
@@ -136,6 +154,9 @@ def process_airport(row, keywords_dict):
             
     with tqdm(total=len(all_phrases), desc=f"[{code}]", leave=False, disable=True) as pbar:
         for category, phrase in all_phrases:
+            if shutdown_event.is_set():
+                return None
+
             query = f"{city_name} {phrase} after:2015-01-01"
             encoded_query = urllib.parse.quote(query)
             
@@ -177,8 +198,22 @@ def process_airport(row, keywords_dict):
             
             time.sleep(random.uniform(2.0, 4.0))
 
-    with print_lock:
-         print(f"   [{code}] DONE. Saved {len(airport_news)} articles.")
+    if not airport_news and not shutdown_event.is_set():
+        airport_news.append({
+            "airport_code": code,
+            "search_term": city_name,
+            "full_name": full_name,
+            "category": "NONE",
+            "keyword_used": "NONE",
+            "title": "NO_DATA",
+            "link": "NO_DATA",
+            "published": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "source": "NO_DATA"
+        })
+
+    if not shutdown_event.is_set():
+        with print_lock:
+             print(f"   [{code}] DONE. Saved {len(airport_news)} articles.")
          
     return airport_news
 
@@ -198,21 +233,22 @@ def main():
 
     print(f"Resuming scraping for {len(df_missing)} remaining airports...")
     
-    all_news = []
     MAX_WORKERS = 1
     
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        future_to_airport = {
-            executor.submit(process_airport, row, keywords_dict): row['ident'] 
-            for index, row in df_missing.iterrows()
-        }
+        future_to_airport = {}
+        for index, row in df_missing.iterrows():
+            if shutdown_event.is_set():
+                break
+            future = executor.submit(process_airport, row, keywords_dict)
+            future_to_airport[future] = row['ident']
         
         for future in concurrent.futures.as_completed(future_to_airport):
             airport_code = future_to_airport[future]
             try:
                 data = future.result()
                 
-                if data:
+                if data is not None:
                     df_chunk = pd.DataFrame(data)
                     file_exists = os.path.isfile(OUTPUT_PATH) and os.path.getsize(OUTPUT_PATH) > 0
                     df_chunk.to_csv(OUTPUT_PATH, mode='a', header=not file_exists, index=False)
@@ -220,6 +256,9 @@ def main():
             except Exception as exc:
                 with print_lock:
                     print(f"   [{airport_code}] Error: {exc}")
+
+    if shutdown_event.is_set():
+        print("\n!!! SCRAPING STOPPED EARLY DUE TO NETWORK ERRORS !!!")
 
     print(f"\nCompleted resume job. Data appended to {OUTPUT_PATH}")
 

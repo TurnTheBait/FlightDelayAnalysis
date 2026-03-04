@@ -12,7 +12,6 @@ scripts = [
     "src/download/reddit_scraper.py",
     "src/download/skytrax_scraper.py",
     "src/download/meteostat_downloader.py",
-    "src/download/population_downloader.py",
     "src/preprocess/clean_news.py",
     "src/preprocess/combine_data.py",
     "src/analysis/sentiment_analysis.py",
