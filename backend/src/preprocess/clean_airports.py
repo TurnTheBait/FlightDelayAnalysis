@@ -15,7 +15,7 @@ TARGET_AIRPORTS = {
     "EVRA", "EYVI", "LATI", "LBBG", "LBSF", "LBWN", "LDZA", "LEAL", "LEBL", "LEIB", 
     "LEMD", "LEMG", "LEPA", "LEST", "LEVC", "LFBD", "LFBO", "LFLL", "LFML", "LFMN", 
     "LFPG", "LFPO", "LFSB", "LGAV", "LGIR", "LGTS", "LHBP", "LIBD", "LIBR", "LICC", 
-    "LICJ", "LIEE", "LIMC", "LIME", "LIMF", "LIMJ", "LIPE", "LIPX", "LIPZ", "LIRF", 
+    "LICJ", "LIEE", "LIMC", "LIML", "LIME", "LIMF", "LIMJ", "LIPE", "LIPX", "LIPZ", "LIRF", 
     "LIRN", "LIRP", "LIRQ", "LJLJ", "LKPR", "LMML", "LOWW", "LPFR", "LPMA", "LPPD", 
     "LPPR", "LPPT", "LQSA", "LROP", "LSGG", "LSZH", "LTFM", "LWSK", "LXGB", "LYBE", 
     "LYPG", "LZIB"

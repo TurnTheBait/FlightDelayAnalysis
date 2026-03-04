@@ -44,3 +44,8 @@ export interface NoiseSentimentPopulation {
     avg_sentiment: number;
     population_10km: number;
 }
+
+export interface AirportWithCoords extends AirportSummary {
+    latitude_deg: number;
+    longitude_deg: number;
+}

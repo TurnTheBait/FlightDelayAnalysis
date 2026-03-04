@@ -101,6 +101,7 @@ SKYTRAX_SLUGS = {
     "LIEE": "cagliari-airport",
     "LIMC": "milan-malpensa-airport",
     "LIME": "milan-bergamo-airport",
+    "LIML": "milan-linate-airport",
     "LIMF": "turin-airport",
     "LIMJ": "genova-airport",
     "LIPE": "bologna-marconi-airport",

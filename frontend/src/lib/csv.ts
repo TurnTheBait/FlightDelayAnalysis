@@ -3,6 +3,7 @@ import path from "path";
 import Papa from "papaparse";
 import type {
     AirportSummary,
+    AirportWithCoords,
     WeatherLaggedEvent,
     NoiseSentimentPopulation,
     CorrelationMatrix,
@@ -56,4 +57,34 @@ export function loadNoisePopulationData(): NoiseSentimentPopulation[] {
     return loadCSV<NoiseSentimentPopulation>(
         "noise_sentiment_10km_population.csv"
     );
+}
+
+export function loadAirportsWithCoords(): AirportWithCoords[] {
+    const airports = loadAirportSummary();
+    const coordsPath = path.resolve(
+        process.cwd(),
+        "..",
+        "backend",
+        "data",
+        "processed",
+        "airports",
+        "airports_filtered.csv"
+    );
+    const raw = fs.readFileSync(coordsPath, "utf-8");
+    const coordsResult = Papa.parse<{
+        iata_code: string;
+        latitude_deg: number;
+        longitude_deg: number;
+    }>(raw, { header: true, dynamicTyping: true, skipEmptyLines: true });
+
+    const coordsMap = new Map(
+        coordsResult.data.map((c) => [c.iata_code, c])
+    );
+
+    return airports
+        .filter((a) => coordsMap.has(a.airport_code))
+        .map((a) => {
+            const c = coordsMap.get(a.airport_code)!;
+            return { ...a, latitude_deg: c.latitude_deg, longitude_deg: c.longitude_deg };
+        });
 }

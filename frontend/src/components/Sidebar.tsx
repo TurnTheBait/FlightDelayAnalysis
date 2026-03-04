@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Globe, Clock, Cloud, Volume2, Plane } from "lucide-react";
+import { Globe, MapPin, Clock, Cloud, Volume2, Plane } from "lucide-react";
 
 const NAV_ITEMS = [
     { href: "/", label: "Global Summary", icon: Globe },
+    { href: "/map", label: "Airport Map", icon: MapPin },
     { href: "/delays", label: "Operational Delays", icon: Clock },
     { href: "/weather", label: "Weather Impact", icon: Cloud },
     { href: "/noise", label: "Noise & Population", icon: Volume2 },
