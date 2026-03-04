@@ -9,7 +9,7 @@ CURRENT_FILE = os.path.abspath(__file__)
 SCRIPTS_DIR = os.path.dirname(CURRENT_FILE)
 PROJECT_ROOT = os.path.abspath(os.path.join(SCRIPTS_DIR, "..", ".."))
 
-AIRPORT_CSV_PATH = os.path.join(PROJECT_ROOT, "data", "raw", "airports", "airports.csv")
+AIRPORT_CSV_PATH = os.path.join(PROJECT_ROOT, "data", "processed", "airports", "airports_filtered.csv")
 WEATHER_OUTPUT_DIR = os.path.join(PROJECT_ROOT, "data", "raw", "weather")
 
 os.makedirs(WEATHER_OUTPUT_DIR, exist_ok=True)

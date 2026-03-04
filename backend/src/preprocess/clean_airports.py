@@ -18,7 +18,8 @@ TARGET_AIRPORTS = {
     "LICJ", "LIEE", "LIMC", "LIML", "LIME", "LIMF", "LIMJ", "LIPE", "LIPX", "LIPZ", "LIRF", 
     "LIRN", "LIRP", "LIRQ", "LJLJ", "LKPR", "LMML", "LOWW", "LPFR", "LPMA", "LPPD", 
     "LPPR", "LPPT", "LQSA", "LROP", "LSGG", "LSZH", "LTFM", "LWSK", "LXGB", "LYBE", 
-    "LYPG", "LZIB"
+    "LYPG", "LZIB","EBBR", "EBCI", "LTFJ", "LTAI", "LCLK", "GCTS", "GCLP", "LEZL", 
+    "LDSP", "LDDU", "LGRP", "EGGD"
 }
 
 def clean_airports():

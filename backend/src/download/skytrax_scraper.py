@@ -66,7 +66,6 @@ SKYTRAX_SLUGS = {
     "EPWA": "warsaw-chopin-airport",
     "ESGG": "gothenburg-landvetter-airport",
     "ESSA": "stockholm-arlanda-airport",
-    "EVLA": "", 
     "EVRA": "riga-airport",
     "EYVI": "vilnius-airport",
     "LATI": "tirana-airport",
@@ -129,7 +128,20 @@ SKYTRAX_SLUGS = {
     "LXGB": "gibraltar-airport",
     "LYBE": "belgrade-airport",
     "LYPG": "podgorica-airport",
-    "LZIB": "bratislava-airport"
+    "LZIB": "bratislava-airport",
+    "EBBR": "brussels-zaventem-airport",
+    "EBCI": "brussels-charleroi-airport",
+    "LTFJ": "istanbul-sabiha-gokcen-airport",
+    "LTFM": "istanbul-airport",
+    "LTAI": "antalya-airport",
+    "LCLK": "larnaca-airport",
+    "GCTS": "tenerife-airport",
+    "GCLP": "gran-canaria-airport",
+    "LEZL": "seville-airport",
+    "LDSP": "split-airport",
+    "LDDU": "dubrovnik-airport",
+    "LGRP": "rhodes-airport",
+    "EGGD": "bristol-airport"
 }
 
 if not os.path.exists(AIRPORTS_CSV_PATH):
