@@ -16,7 +16,6 @@ SRC_DIR = os.path.dirname(ANALYSIS_DIR)
 BACKEND_DIR = os.path.dirname(SRC_DIR)
 
 AIRPORTS_CSV_PATH = os.path.join(BACKEND_DIR, 'data', 'processed', 'airports', 'airports_filtered.csv')
-SENTIMENT_CSV_PATH = os.path.join(BACKEND_DIR, 'data', 'sentiment', 'sentiment_results_noise.csv')
 VOLUME_CSV_PATH = os.path.join(BACKEND_DIR, 'results', 'tables', 'airport_volume_analysis_summary.csv')
 RASTER_PATH = os.path.join(BACKEND_DIR, 'data', 'raw', 'population', 'global_pop_2026_CN_1km_R2025A_UA_v1.tif')
 
@@ -28,17 +27,6 @@ TABLES_RESULTS_DIR = os.path.join(BACKEND_DIR, 'results', 'tables', 'population_
 
 os.makedirs(FIGURES_RESULTS_DIR, exist_ok=True)
 os.makedirs(TABLES_RESULTS_DIR, exist_ok=True)
-
-def load_data():
-    print("Loading data...")
-    try:
-        df_airports = pd.read_csv(AIRPORTS_CSV_PATH)
-        df_sentiment = pd.read_csv(SENTIMENT_CSV_PATH)
-        df_volume = pd.read_csv(VOLUME_CSV_PATH)
-        return df_airports, df_sentiment, df_volume
-    except Exception as e:
-        print(f"Error loading data: {e}")
-        return None, None, None
 
 def create_10km_buffer_polygon(lat, lon):
     origin = (lat, lon)
@@ -80,7 +68,7 @@ def extract_population_from_raster(df_airports):
     gdf_airports['population_10km'] = populations
     return pd.DataFrame(gdf_airports.drop(columns='geometry'))
 
-def analyze_correlation(df_merged):
+def analyze_correlation(df_merged, mode):
     print("\nAnalyzing correlations with Airport Size Normalization...")
     
     df_merged = df_merged.dropna(subset=['population_10km', 'total_flights', 'avg_sentiment'])
@@ -133,9 +121,9 @@ def analyze_correlation(df_merged):
     )
     ax1.set_xscale('log')
     ax1.set_ylim(0, 10.5)
-    ax1.set_title(f'10km Buffer Population vs Noise Sentiment\n(Pearson r = {corr_raw:.2f})', pad=15, fontsize=14, fontweight='bold')
+    ax1.set_title(f'10km Buffer Population vs {mode.capitalize()} Sentiment\n(Pearson r = {corr_raw:.2f})', pad=15, fontsize=14, fontweight='bold')
     ax1.set_xlabel('10km Buffer Population (Log Scale)', fontsize=12)
-    ax1.set_ylabel('Average Noise Sentiment (1-10)', fontsize=12)
+    ax1.set_ylabel(f'Average {mode.capitalize()} Sentiment (1-10)', fontsize=12)
     ax1.tick_params(axis='both', which='major', labelsize=11)
     
     ax2 = axes[1]
@@ -165,46 +153,69 @@ def analyze_correlation(df_merged):
     )
     ax2.set_xscale('log')
     ax2.set_ylim(0, 10.5)
-    ax2.set_title(f'Normalized Population vs Noise Sentiment\n(Pearson r = {corr_norm:.2f})', pad=15, fontsize=14, fontweight='bold')
+    ax2.set_title(f'Normalized Population vs {mode.capitalize()} Sentiment\n(Pearson r = {corr_norm:.2f})', pad=15, fontsize=14, fontweight='bold')
     ax2.set_xlabel('Population per Scheduled Flight (Log Scale)', fontsize=12)
-    ax2.set_ylabel('Average Noise Sentiment (1-10)', fontsize=12)
+    ax2.set_ylabel(f'Average {mode.capitalize()} Sentiment (1-10)', fontsize=12)
     ax2.tick_params(axis='both', which='major', labelsize=11)
     
     handles, labels = scatter2.get_legend_handles_labels()
     ax2.legend(handles, labels, title='Total Flights', bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=10, title_fontsize=11)
     
     plt.tight_layout()
-    output_path = os.path.join(FIGURES_RESULTS_DIR, 'sentiment_noise_vs_population_raster.png')
+    output_path = os.path.join(FIGURES_RESULTS_DIR, f'sentiment_{mode}_vs_population_raster.png')
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     print(f"Saved scatter plot to {output_path}")
 
 def main():
-    df_airports, df_sentiment, df_volume = load_data()
-    if df_airports is None: return
-    
-    print("Aggregating sentiment scores...")
-    df_sent_agg = df_sentiment.groupby('airport_code').apply(
-        lambda x: np.average(x['combined_score'], weights=x['weight']),
-        include_groups=False
-    ).reset_index(name='avg_sentiment')
-    
+    print("Loading base data for population analysis...")
+    df_airports = pd.read_csv(AIRPORTS_CSV_PATH)
+    df_volume = pd.read_csv(VOLUME_CSV_PATH)
+
     df_airports_pop = extract_population_from_raster(df_airports)
-    
     print("Mapping airport codes...")
     icao_to_iata = get_icao_to_iata_mapping(AIRPORTS_CSV_PATH)
     df_airports_pop['airport_code'] = df_airports_pop['ident'].map(icao_to_iata).fillna(df_airports_pop['ident'])
     
-    print("Merging datasets...")
-    df_merged = pd.merge(df_airports_pop, df_sent_agg, on='airport_code', how='inner')
-    df_final = pd.merge(df_merged, df_volume[['airport_code', 'total_flights', 'volume_norm']], on='airport_code', how='inner')
+    modes = ['general', 'delay', 'noise']
+    for mode in modes:
+        print(f"\n{'='*50}")
+        print(f"🚀 Processing mode: {mode.upper()}")
+        print(f"{'='*50}")
+        
+        sentiment_path = os.path.join(BACKEND_DIR, 'data', 'sentiment', f'sentiment_results_{mode}.csv')
+        if not os.path.exists(sentiment_path):
+            print(f"[ERROR] file not found: {sentiment_path}")
+            continue
+            
+        df_sentiment = pd.read_csv(sentiment_path)
     
-    print(f"Final dataset for analysis: {len(df_final)} airports.")
-    
-    output_csv = os.path.join(TABLES_RESULTS_DIR, 'population_sentiment_noise_raster.csv')
-    df_final.to_csv(output_csv, index=False)
-    print(f"Saved data table to {output_csv}")
-    
-    analyze_correlation(df_final)
+        print(f"Aggregating sentiment scores and filtering by {mode} review count (>= 10)...")
+        def agg_sentiment(x):
+            return pd.Series({
+                'avg_sentiment': np.average(x['combined_score'], weights=x['weight']),
+                f'{mode}_review_count': len(x)
+            })
+        
+        df_sent_agg = df_sentiment.groupby('airport_code').apply(
+            agg_sentiment,
+            include_groups=False
+        ).reset_index()
+        
+        initial_count = len(df_sent_agg)
+        df_sent_agg = df_sent_agg[df_sent_agg[f'{mode}_review_count'] >= 10]
+        print(f"Filtered {mode} airports from {initial_count} to {len(df_sent_agg)} (minimum 10 reviews).")
+        
+        print("Merging datasets...")
+        df_merged = pd.merge(df_airports_pop, df_sent_agg, on='airport_code', how='inner')
+        df_final = pd.merge(df_merged, df_volume[['airport_code', 'total_flights', 'volume_norm']], on='airport_code', how='inner')
+        
+        print(f"Final dataset for {mode} analysis: {len(df_final)} airports.")
+        
+        output_csv = os.path.join(TABLES_RESULTS_DIR, f'population_sentiment_{mode}_raster.csv')
+        df_final.to_csv(output_csv, index=False)
+        print(f"Saved data table to {output_csv}")
+        
+        analyze_correlation(df_final, mode)
 
 if __name__ == "__main__":
     main()

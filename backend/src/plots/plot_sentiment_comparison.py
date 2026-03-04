@@ -26,6 +26,10 @@ def plot_model_comparison(file_name, mode_name):
 
     df['score_diff'] = df['model_a_score'] - df['model_b_score']
     
+    within_tol = df[(df['score_diff'] >= -2) & (df['score_diff'] <= 2)]
+    pct_within = (len(within_tol) / len(df)) * 100
+    pct_outside = 100 - pct_within
+    
     sns.set_theme(style="whitegrid")
     
     plt.figure(figsize=(10, 8))
@@ -42,9 +46,11 @@ def plot_model_comparison(file_name, mode_name):
     plt.figure(figsize=(10, 6))
     sns.histplot(df['score_diff'], kde=True, bins=50, color='purple')
     plt.axvline(0, color='red', linestyle='--', linewidth=2)
+    plt.axvspan(-2, 2, color='green', alpha=0.2, label=f'In range [-2, +2]: {pct_within:.1f}%')
     plt.title(f'Distribuzione della Differenza (Mod. A - Mod. B) - {mode_name.capitalize()}')
     plt.xlabel('Differenza di Punteggio')
     plt.ylabel('Frequenza')
+    plt.legend()
     plt.tight_layout()
     plt.savefig(os.path.join(PLOTS_DIR, f'diff_dist_{mode_name}.png'), dpi=300)
     plt.close()
@@ -60,6 +66,22 @@ def plot_model_comparison(file_name, mode_name):
     plt.savefig(os.path.join(PLOTS_DIR, f'kde_{mode_name}.png'), dpi=300)
     plt.close()
     
+    within_tol = df[(df['score_diff'] >= -2) & (df['score_diff'] <= 2)]
+    pct_within = (len(within_tol) / len(df)) * 100
+    pct_outside = 100 - pct_within
+
+    plt.figure(figsize=(8, 8))
+    labels = ['Differenza in [-2, +2]', 'Differenza > |2|']
+    sizes = [pct_within, pct_outside]
+    colors = ['#4CAF50', '#F44336']
+    explode = (0.1, 0)
+    
+    plt.pie(sizes, explode=explode, labels=labels, colors=colors, autopct='%1.1f%%', shadow=True, startangle=140, textprops={'fontsize': 12})
+    plt.title(f'Recensioni con Differenza di Voto in [-2, +2] - {mode_name.capitalize()}', fontsize=14)
+    plt.tight_layout()
+    plt.savefig(os.path.join(PLOTS_DIR, f'diff_tolerance_pie_{mode_name}.png'), dpi=300)
+    plt.close()
+    
     mae = df['score_diff'].abs().mean()
     corr = df['model_a_score'].corr(df['model_b_score'])
     mean_diff = df['score_diff'].mean()
@@ -68,6 +90,7 @@ def plot_model_comparison(file_name, mode_name):
     print(f"- Correlazione Pearson: {corr:.3f}")
     print(f"- Errore Medio Assoluto (MAE): {mae:.3f}")
     print(f"- Differenza Media (A - B): {mean_diff:.3f}")
+    print(f"- % Recensioni con diff in [-2, +2]: {pct_within:.1f}%")
     print("-" * 50)
 
 def main():
