@@ -16,7 +16,7 @@ scripts = [
     "src/preprocess/clean_news.py",
     "src/preprocess/combine_data.py",
     "src/analysis/sentiment_analysis.py",
-    "src/analysis/calculate_impact_scores.py",
+    "src/analysis/calculate_scores.py",
     "src/analysis/summary.py",
     "src/analysis/flight_volume_analysis.py",
     "src/analysis/merge_weather_data.py",
