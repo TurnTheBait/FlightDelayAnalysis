@@ -132,7 +132,7 @@ def process_dataset(df, mode, strategic_hubs, keywords=None):
     result_df = pd.DataFrame(results)
     final_df = pd.concat([df_subset.reset_index(drop=True), result_df], axis=1)
     
-    output_filename = f"sentiment_results _raw_{mode}.csv"
+    output_filename = f"sentiment_results_raw_{mode}.csv"
     output_path = os.path.join(DATA_DIR, 'sentiment', output_filename)
     final_df.to_csv(output_path, index=False)
     print(f"Saved: {output_path}")

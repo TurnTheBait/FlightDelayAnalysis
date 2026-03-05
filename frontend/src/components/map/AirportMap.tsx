@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useCallback } from "react";
-import { MapContainer, TileLayer, CircleMarker, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, CircleMarker, ZoomControl, useMap } from "react-leaflet";
 import type { AirportWithCoords } from "@/lib/types";
 import AirportSearch from "./AirportSearch";
 import AirportDetailPanel from "./AirportDetailPanel";
@@ -58,9 +58,10 @@ export default function AirportMap({ airports }: Props) {
                 center={[50.5, 12]}
                 zoom={5}
                 className="map-container"
-                zoomControl={true}
+                zoomControl={false}
                 attributionControl={false}
             >
+                <ZoomControl position="bottomright" />
                 <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
                 {flyTarget && (
                     <FlyTo lat={flyTarget.lat} lng={flyTarget.lng} zoom={flyTarget.zoom} />

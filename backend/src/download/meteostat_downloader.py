@@ -1,9 +1,7 @@
 import os
 import pandas as pd
 from datetime import datetime
-from meteostat import hourly, stations, Point, config
-
-config.block_large_requests = False
+from meteostat import Hourly, Stations
 
 CURRENT_FILE = os.path.abspath(__file__)
 SCRIPTS_DIR = os.path.dirname(CURRENT_FILE)
@@ -14,45 +12,37 @@ WEATHER_OUTPUT_DIR = os.path.join(PROJECT_ROOT, "data", "raw", "weather")
 
 os.makedirs(WEATHER_OUTPUT_DIR, exist_ok=True)
 
-def load_european_large_airports():
-    df = pd.read_csv(AIRPORT_CSV_PATH)
-
-    df = df[
-        (df["type"] == "large_airport") &
-        (df["continent"] == "EU") &
-        (df["latitude_deg"].notna()) &
-        (df["longitude_deg"].notna())
-    ]
-
-    print(f"Found {len(df)} large European airports")
-    return df
-
-def get_nearest_meteostat_station(lat: float, lon: float):
-    try:
-        pt = Point(lat, lon)
-        station = stations.nearby(pt)
-        station = station.head(1)
-
-        if station.empty:
-            return None
-
-        return station.index[0] 
-    except Exception:
-        return None
+def get_best_meteostat_stations(ident: str, lat: float, lon: float):
+    stns = Stations()
+    nearby_stations = stns.nearby(lat, lon).fetch(5)
+    
+    if nearby_stations.empty:
+        return []
+        
+    station_ids = []
+    
+    icao_matches = nearby_stations[nearby_stations['icao'] == ident]
+    if not icao_matches.empty:
+        station_ids.append(icao_matches.index[0])
+        
+    for sid in nearby_stations.index:
+        if sid not in station_ids:
+            station_ids.append(sid)
+            
+    return station_ids
 
 def download_weather(station_id: str, start: datetime, end: datetime):
     try:
-        data = hourly(station_id, start, end).fetch()
-        return data
+        data = Hourly(station_id, start, end)
+        return data.fetch()
     except Exception as e:
         print(f"Error downloading weather for {station_id}: {e}")
         return None
 
 def main():
+    airports = pd.read_csv(AIRPORT_CSV_PATH)
 
-    airports = load_european_large_airports()
-
-    start = datetime(2015, 1, 1, 00, 00)
+    start = datetime(2015, 1, 1, 0, 0)
     end = datetime.now()
 
     for _, row in airports.iterrows():
@@ -67,24 +57,34 @@ def main():
             print(f"Skipping {ident}, already downloaded")
             continue
 
-        print(f"\n Processing airport {name} ({ident})")
+        print(f"\nProcessing airport {name} ({ident})")
 
-        station_id = get_nearest_meteostat_station(lat, lon)
+        station_ids = get_best_meteostat_stations(ident, lat, lon)
 
-        if station_id is None:
-            print(f"No Meteostat station found for {ident}")
+        if not station_ids:
+            print(f"No Meteostat stations found for {ident}")
             continue
 
-        print(f"Using nearest Meteostat station → {station_id}")
+        weather = None
+        used_station = None
 
-        weather = download_weather(station_id, start, end)
+        for sid in station_ids:
+            print(f"Trying Meteostat station -> {sid}")
+            w = download_weather(sid, start, end)
+            
+            if w is not None and not w.empty:
+                weather = w
+                used_station = sid
+                break
+            else:
+                print(f"Station {sid} returned no data, trying next...")
 
         if weather is None or weather.empty:
-            print(f"No weather data for {ident}")
+            print(f"No weather data found for {ident} across all nearby stations")
             continue
 
         weather.to_parquet(output_file)
-        print(f"Saved → {output_file}")
+        print(f"Saved -> {output_file} (using station {used_station})")
 
 if __name__ == "__main__":
     main()
