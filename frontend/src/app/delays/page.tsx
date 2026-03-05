@@ -1,6 +1,7 @@
 import { loadAirportSummary } from "@/lib/csv";
 import DelayScatter from "@/components/charts/DelayScatter";
 import DelayBarChart from "@/components/charts/DelayBarChart";
+import FadeIn from "@/components/FadeIn";
 
 export default function DelaysPage() {
     const allAirports = loadAirportSummary();
@@ -24,45 +25,47 @@ export default function DelaysPage() {
 
     return (
         <>
-            <header className="page-header">
-                <h1 className="page-header__title">Operational Delays</h1>
-                <p className="page-header__subtitle">
-                    Passenger sentiment analysis for delay-related reviews across European
-                    airports, measuring how flight disruptions impact public perception.
-                </p>
-            </header>
+            <FadeIn>
+                <header className="page-header">
+                    <h1 className="page-header__title">Operational Delays</h1>
+                    <p className="page-header__subtitle">
+                        Passenger sentiment analysis for delay-related reviews across European
+                        airports, measuring how flight disruptions impact public perception.
+                    </p>
+                </header>
+            </FadeIn>
 
             <div className="kpi-row">
-                <div className="kpi-card">
+                <FadeIn delay={0.05} className="kpi-card">
                     <div className="kpi-card__label">Avg Delay Sentiment</div>
                     <div className="kpi-card__value">{avgMean.toFixed(2)}</div>
                     <div className="kpi-card__sub">Across all airports</div>
-                </div>
-                <div className="kpi-card">
+                </FadeIn>
+                <FadeIn delay={0.1} className="kpi-card">
                     <div className="kpi-card__label">Total Delay Reviews</div>
                     <div className="kpi-card__value">
                         {totalDelayReviews.toLocaleString()}
                     </div>
                     <div className="kpi-card__sub">Filtered for delay topics</div>
-                </div>
-                <div className="kpi-card">
+                </FadeIn>
+                <FadeIn delay={0.15} className="kpi-card">
                     <div className="kpi-card__label">Best Performance</div>
                     <div className="kpi-card__value">{best.airport_code}</div>
                     <div className="kpi-card__sub">
                         Sentiment: {best.delay_weighted_sentiment!.toFixed(2)}
                     </div>
-                </div>
-                <div className="kpi-card">
+                </FadeIn>
+                <FadeIn delay={0.2} className="kpi-card">
                     <div className="kpi-card__label">Most Criticized</div>
                     <div className="kpi-card__value">{worst.airport_code}</div>
                     <div className="kpi-card__sub">
                         Sentiment: {worst.delay_weighted_sentiment!.toFixed(2)}
                     </div>
-                </div>
+                </FadeIn>
             </div>
 
             <div className="bento-grid">
-                <div className="bento-grid__item col-span-4">
+                <FadeIn delay={0.25} className="bento-grid__item col-span-4">
                     <div className="card-title">
                         Delay Sentiment{" "}
                         <span className="card-title__accent">
@@ -70,15 +73,15 @@ export default function DelaysPage() {
                         </span>
                     </div>
                     <DelayScatter data={delayData} avgMean={avgMean} />
-                </div>
+                </FadeIn>
 
-                <div className="bento-grid__item col-span-2">
+                <FadeIn delay={0.3} className="bento-grid__item col-span-2">
                     <div className="card-title">
                         Top 15{" "}
                         <span className="card-title__accent">by Delay Review Count</span>
                     </div>
                     <DelayBarChart data={top15} />
-                </div>
+                </FadeIn>
             </div>
         </>
     );

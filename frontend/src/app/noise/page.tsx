@@ -1,6 +1,7 @@
 import { loadAirportSummary, loadNoisePopulationData } from "@/lib/csv";
 import NoisePopulationScatter from "@/components/charts/NoisePopulationScatter";
 import NoiseRankingChart from "@/components/charts/NoiseRankingChart";
+import FadeIn from "@/components/FadeIn";
 
 export default function NoisePage() {
     const allAirports = loadAirportSummary();
@@ -32,29 +33,31 @@ export default function NoisePage() {
 
     return (
         <>
-            <header className="page-header">
-                <h1 className="page-header__title">Noise & Population</h1>
-                <p className="page-header__subtitle">
-                    Analyzing the relationship between airport noise sentiment and the
-                    population living within a 10km radius, calculated using WorldPop
-                    GeoTIFF raster data.
-                </p>
-            </header>
+            <FadeIn>
+                <header className="page-header">
+                    <h1 className="page-header__title">Noise & Population</h1>
+                    <p className="page-header__subtitle">
+                        Analyzing the relationship between airport noise sentiment and the
+                        population living within a 10km radius, calculated using WorldPop
+                        GeoTIFF raster data.
+                    </p>
+                </header>
+            </FadeIn>
 
             <div className="kpi-row">
-                <div className="kpi-card">
+                <FadeIn delay={0.05} className="kpi-card">
                     <div className="kpi-card__label">Avg Noise Sentiment</div>
                     <div className="kpi-card__value">{avgNoiseSentiment.toFixed(2)}</div>
                     <div className="kpi-card__sub">Across {airports.length} airports</div>
-                </div>
-                <div className="kpi-card">
+                </FadeIn>
+                <FadeIn delay={0.1} className="kpi-card">
                     <div className="kpi-card__label">Highest Population Exposure</div>
                     <div className="kpi-card__value">{highestPop.airport_code}</div>
                     <div className="kpi-card__sub">
                         {Math.round(highestPop.population_10km).toLocaleString()} residents
                     </div>
-                </div>
-                <div className="kpi-card">
+                </FadeIn>
+                <FadeIn delay={0.15} className="kpi-card">
                     <div className="kpi-card__label">Lowest Noise Sentiment</div>
                     <div className="kpi-card__value">
                         {lowestSentiment.airport_code}
@@ -62,11 +65,11 @@ export default function NoisePage() {
                     <div className="kpi-card__sub">
                         Score: {lowestSentiment.noise_weighted_sentiment!.toFixed(2)}
                     </div>
-                </div>
+                </FadeIn>
             </div>
 
             <div className="bento-grid">
-                <div className="bento-grid__item col-span-4">
+                <FadeIn delay={0.2} className="bento-grid__item col-span-4">
                     <div className="card-title">
                         Noise Sentiment{" "}
                         <span className="card-title__accent">
@@ -74,9 +77,9 @@ export default function NoisePage() {
                         </span>
                     </div>
                     <NoisePopulationScatter data={population} />
-                </div>
+                </FadeIn>
 
-                <div className="bento-grid__item col-span-2">
+                <FadeIn delay={0.25} className="bento-grid__item col-span-2">
                     <div className="card-title">
                         Top 15{" "}
                         <span className="card-title__accent">
@@ -84,7 +87,7 @@ export default function NoisePage() {
                         </span>
                     </div>
                     <NoiseRankingChart data={top15Noise} />
-                </div>
+                </FadeIn>
             </div>
         </>
     );

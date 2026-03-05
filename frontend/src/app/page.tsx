@@ -2,6 +2,7 @@ import { loadAirportSummary } from "@/lib/csv";
 import ReliabilityMatrix from "@/components/charts/ReliabilityMatrix";
 import ReviewSourcesChart from "@/components/charts/ReviewSourcesChart";
 import PressureDistribution from "@/components/charts/PressureDistribution";
+import FadeIn from "@/components/FadeIn";
 
 export default function HomePage() {
   const airports = loadAirportSummary();
@@ -55,22 +56,24 @@ export default function HomePage() {
 
   return (
     <>
-      <header className="page-header">
-        <h1 className="page-header__title">Global Summary</h1>
-        <p className="page-header__subtitle">
-          Comprehensive overview of European airport performance combining NLP
-          sentiment analysis, media pressure indexing, and review volume across
-          {" "}{airports.length} airports.
-        </p>
-      </header>
+      <FadeIn>
+        <header className="page-header">
+          <h1 className="page-header__title">Global Summary</h1>
+          <p className="page-header__subtitle">
+            Comprehensive overview of European airport performance combining NLP
+            sentiment analysis, media pressure indexing, and review volume across
+            {" "}{airports.length} airports.
+          </p>
+        </header>
+      </FadeIn>
 
       <div className="kpi-row">
-        <div className="kpi-card">
+        <FadeIn delay={0.05} className="kpi-card">
           <div className="kpi-card__label">Avg Global Sentiment</div>
           <div className="kpi-card__value">{avgSentiment.toFixed(2)}</div>
           <div className="kpi-card__sub">Scale 1-10 across all airports</div>
-        </div>
-        <div className="kpi-card">
+        </FadeIn>
+        <FadeIn delay={0.1} className="kpi-card">
           <div className="kpi-card__label">Total Verified Reviews</div>
           <div className="kpi-card__value">
             {totalReviews.toLocaleString()}
@@ -78,16 +81,16 @@ export default function HomePage() {
           <div className="kpi-card__sub">
             Google News + Reddit + Skytrax
           </div>
-        </div>
-        <div className="kpi-card">
+        </FadeIn>
+        <FadeIn delay={0.15} className="kpi-card">
           <div className="kpi-card__label">Avg Media Pressure</div>
           <div className="kpi-card__value">{avgPressure.toFixed(2)}</div>
           <div className="kpi-card__sub">Logarithmic index of media pressure</div>
-        </div>
+        </FadeIn>
       </div>
 
       <div className="bento-grid">
-        <div className="bento-grid__item col-span-4">
+        <FadeIn delay={0.2} className="bento-grid__item col-span-4">
           <div className="card-title">
             Reliability Matrix{" "}
             <span className="card-title__accent">
@@ -95,9 +98,9 @@ export default function HomePage() {
             </span>
           </div>
           <ReliabilityMatrix data={scatterData} />
-        </div>
+        </FadeIn>
 
-        <div className="bento-grid__item col-span-2">
+        <FadeIn delay={0.25} className="bento-grid__item col-span-2">
           <div className="card-title">Top Airports by Sentiment</div>
           <div className="ranking-list">
             {top10.map((a, i) => (
@@ -111,23 +114,23 @@ export default function HomePage() {
               </div>
             ))}
           </div>
-        </div>
+        </FadeIn>
 
-        <div className="bento-grid__item col-span-3">
+        <FadeIn delay={0.3} className="bento-grid__item col-span-3">
           <div className="card-title">
             Review Sources{" "}
             <span className="card-title__accent">Top 12 Airports</span>
           </div>
           <ReviewSourcesChart data={reviewSourcesData} />
-        </div>
+        </FadeIn>
 
-        <div className="bento-grid__item col-span-3">
+        <FadeIn delay={0.35} className="bento-grid__item col-span-3">
           <div className="card-title">
             Pressure Distribution{" "}
             <span className="card-title__accent">Airport Count by Range</span>
           </div>
           <PressureDistribution data={pressureDistData} />
-        </div>
+        </FadeIn>
       </div>
     </>
   );
