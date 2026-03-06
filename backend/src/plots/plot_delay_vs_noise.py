@@ -71,16 +71,16 @@ for i, row in df_scatter.iterrows():
     plt.text(row['combined_score_delay'], row['combined_score_noise'], row['airport_code'], 
              fontsize=9, alpha=0.8, ha='center', va='bottom')
 
-plt.text(3.25, 8.5, 'Pessimo Delay\nOttimo Noise', fontsize=12, color='gray', weight='bold', ha='center', va='center')
-plt.text(7.75, 8.5, 'Ottimo Delay\nOttimo Noise', fontsize=12, color='gray', weight='bold', ha='center', va='center')
-plt.text(3.25, 3.5, 'Pessimo Delay\nPessimo Noise', fontsize=12, color='gray', weight='bold', ha='center', va='center')
-plt.text(7.75, 3.5, 'Ottimo Delay\nPessimo Noise', fontsize=12, color='gray', weight='bold', ha='center', va='center')
-
 plt.title('Matrice Relazionale Sentiment: Delay vs Noise', fontsize=16, weight='bold')
 plt.xlabel('Voto Sentiment Delay (1-10)', fontsize=12)
 plt.ylabel('Voto Sentiment Noise (1-10)', fontsize=12)
-plt.xlim(1, 10.5)
-plt.ylim(1, 10.5)
+
+x_min, x_max = df_scatter['combined_score_delay'].min(), df_scatter['combined_score_delay'].max()
+y_min, y_max = df_scatter['combined_score_noise'].min(), df_scatter['combined_score_noise'].max()
+margin_x = (x_max - x_min) * 0.1 if (x_max - x_min) > 0 else 0.5
+margin_y = (y_max - y_min) * 0.1 if (y_max - y_min) > 0 else 0.5
+plt.xlim(x_min - margin_x, x_max + margin_x)
+plt.ylim(y_min - margin_y, y_max + margin_y)
 plt.grid(True, linestyle=':', alpha=0.5)
 
 plt.legend(title='N. Recensioni', bbox_to_anchor=(1.02, 1), loc='upper left')

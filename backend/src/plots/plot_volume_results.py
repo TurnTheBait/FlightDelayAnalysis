@@ -75,7 +75,7 @@ def main():
     scatter = sns.scatterplot(
         data=df, 
         x='total_flights', 
-        y='global_weighted_sentiment', 
+        y='composite_score', 
         size='total_mentions', 
         hue='composite_score', 
         sizes=(20, 500), 
@@ -90,18 +90,22 @@ def main():
     plt.xlabel('Total Flights (Log Scale)', fontsize=12)
     plt.ylabel('Global Sentiment (1-10)', fontsize=12)
 
-    plt.ylim(0, 10.5)
+    y_min, y_max = df['composite_score'].min(), df['composite_score'].max()
+    margin = (y_max - y_min) * 0.1
+    if margin == 0: margin = 0.5
+    plt.ylim(y_min - margin, y_max + margin)
+
     plt.grid(True, which="both", ls="-", alpha=0.2)
     plt.axhline(y=5.5, color='gray', linestyle='--', label='Neutral Sentiment (5.5)')
 
     top_vol = df.nlargest(5, 'total_flights')
-    top_sent = df.nlargest(3, 'global_weighted_sentiment')
-    bot_sent = df.nsmallest(3, 'global_weighted_sentiment')
+    top_sent = df.nlargest(3, 'composite_score')
+    bot_sent = df.nsmallest(3, 'composite_score')
     
     points_to_label = pd.concat([top_vol, top_sent, bot_sent]).drop_duplicates(subset=['airport_code'])
     
     for row in points_to_label.itertuples():
-        plt.text(row.total_flights, row.global_weighted_sentiment, row.airport_code, fontsize=9, weight='bold')
+        plt.text(row.total_flights, row.composite_score, row.airport_code, fontsize=9, weight='bold')
 
     plt.tight_layout()
     output_scatter = os.path.join(OUTPUT_DIR, 'volume_vs_sentiment.png')
