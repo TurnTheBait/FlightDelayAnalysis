@@ -68,3 +68,33 @@ plt.savefig(scatter_path, dpi=300)
 plt.close()
 
 print(f"Salvato il plot pressione mediatica in {results_dir}")
+
+print("Calcolando le correlazioni tra pressione mediatica e sentiment...")
+correlation_vars = ['delay_pressure', 'noise_pressure', 'delay_weighted_sentiment', 'noise_weighted_sentiment']
+df_corr = df[correlation_vars].copy()
+correlation_matrix = df_corr.corr(method='pearson')
+
+tables_dir = os.path.join(backend_dir, 'results', 'tables')
+os.makedirs(tables_dir, exist_ok=True)
+corr_csv_path = os.path.join(tables_dir, 'media_pressure_vs_sentiment_correlation.csv')
+correlation_matrix.to_csv(corr_csv_path)
+print(f"Tabella delle correlazioni salvata in: {corr_csv_path}")
+
+plt.figure(figsize=(10, 8))
+sns.heatmap(
+    correlation_matrix, 
+    annot=True, 
+    cmap='coolwarm', 
+    vmin=-1, vmax=1, 
+    center=0,
+    square=True,
+    linewidths=.5,
+    cbar_kws={"shrink": .8}
+)
+plt.title('Correlazione: Pressione Mediatica vs Sentiment Score', fontsize=16, weight='bold')
+
+plt.tight_layout()
+heatmap_path = os.path.join(results_dir, 'heatmap_media_pressure_vs_sentiment_correlation.png')
+plt.savefig(heatmap_path, dpi=300)
+plt.close()
+print(f"Salvato plot heatmap correlazioni in: {heatmap_path}")
