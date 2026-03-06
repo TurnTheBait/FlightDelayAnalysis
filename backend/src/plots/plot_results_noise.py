@@ -35,6 +35,7 @@ def main():
     df['score_scaled'] = df['combined_score']
 
     agg_data = df.groupby('airport_code')['score_scaled'].agg(['mean', 'count']).reset_index()
+    agg_data = agg_data[agg_data['count'] >= 10]
     agg_data = agg_data.sort_values('mean', ascending=False)
 
 

@@ -6,7 +6,7 @@ import FadeIn from "@/components/FadeIn";
 export default function DelaysPage() {
     const allAirports = loadAirportSummary();
     const airports = allAirports.filter(
-        (a) => a.delay_weighted_sentiment != null && a.delay_reviews_count != null
+        (a) => a.delay_weighted_sentiment != null && a.delay_reviews_count != null && a.delay_reviews_count >= 10
     );
 
     const avgMean =

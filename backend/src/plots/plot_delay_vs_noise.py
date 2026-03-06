@@ -32,6 +32,7 @@ def aggregate_data(df, category):
     }).reset_index()
     
     agg = agg.rename(columns={'text': 'review_count'})
+    agg = agg[agg['review_count'] >= 10]
     
     rename_cols = {c: f"{c}_{category}" for c in agg.columns if c != 'airport_code'}
     agg = agg.rename(columns=rename_cols)

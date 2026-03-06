@@ -66,22 +66,26 @@ export default function AirportMap({ airports }: Props) {
                 {flyTarget && (
                     <FlyTo lat={flyTarget.lat} lng={flyTarget.lng} zoom={flyTarget.zoom} />
                 )}
-                {airports.map((a) => (
-                    <CircleMarker
-                        key={a.airport_code}
-                        center={[a.latitude_deg, a.longitude_deg]}
-                        radius={markerRadius(a.total_mentions, maxMentions)}
-                        pathOptions={{
-                            fillColor: sentimentColor(a.global_weighted_sentiment),
-                            fillOpacity: 0.75,
-                            color: "rgba(255,255,255,0.2)",
-                            weight: 1,
-                        }}
-                        eventHandlers={{
-                            click: () => handleSelect(a),
-                        }}
-                    />
-                ))}
+                {airports.map((a) => {
+                    const isSelected = selected?.airport_code === a.airport_code;
+                    return (
+                        <CircleMarker
+                            key={a.airport_code}
+                            center={[a.latitude_deg, a.longitude_deg]}
+                            radius={markerRadius(a.total_mentions, maxMentions)}
+                            pathOptions={{
+                                fillColor: sentimentColor(a.global_weighted_sentiment),
+                                fillOpacity: isSelected ? 1 : 0.75,
+                                color: isSelected ? "#fff" : "rgba(255,255,255,0.2)",
+                                weight: isSelected ? 2.5 : 1,
+                            }}
+                            eventHandlers={{
+                                click: () => handleSelect(a),
+                            }}
+                            className={isSelected ? "marker-selected" : ""}
+                        />
+                    );
+                })}
             </MapContainer>
             {selected && (
                 <AirportDetailPanel airport={selected} onClose={handleClose} />

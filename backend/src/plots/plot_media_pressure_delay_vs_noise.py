@@ -17,6 +17,7 @@ if not os.path.exists(data_file):
     sys.exit()
 
 df = pd.read_csv(data_file)
+df = df[(df['delay_reviews_count'] >= 10) & (df['noise_reviews_count'] >= 10)]
 
 if df.empty or 'delay_reviews_count' not in df.columns or 'noise_reviews_count' not in df.columns:
     print("Dati mancanti per plot pressione mediatica.")
