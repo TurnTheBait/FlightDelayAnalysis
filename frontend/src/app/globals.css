@@ -1004,31 +1004,50 @@ body::after {
   }
 }
 
-path.marker-selected {
-  animation: continuousPulse 1.5s ease-in-out infinite !important;
-  transform-origin: center !important;
-  transform-box: fill-box !important;
+.ring-container {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  transform: translate(-50%, -50%);
 }
 
-@keyframes continuousPulse {
+.circle {
+  width: 14px;
+  height: 14px;
+  background-color: var(--marker-color);
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 10px var(--marker-color);
+}
+
+.ringring {
+  border: 3px solid var(--marker-color);
+  border-radius: 50%;
+  height: 30px;
+  width: 30px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: pulsate 1.5s ease-out infinite;
+  opacity: 0;
+}
+
+@keyframes pulsate {
   0% {
-    stroke-width: 2px !important;
-    stroke-opacity: 0.5 !important;
-    fill-opacity: 0.7 !important;
-    filter: drop-shadow(0 0 2px #fff);
+    transform: translate(-50%, -50%) scale(0.1);
+    opacity: 0;
   }
 
   50% {
-    stroke-width: 12px !important;
-    stroke-opacity: 0.8 !important;
-    fill-opacity: 1 !important;
-    filter: drop-shadow(0 0 12px #fff);
+    opacity: 1;
   }
 
   100% {
-    stroke-width: 2px !important;
-    stroke-opacity: 0.5 !important;
-    fill-opacity: 0.7 !important;
-    filter: drop-shadow(0 0 2px #fff);
+    transform: translate(-50%, -50%) scale(1.6);
+    opacity: 0;
   }
 }

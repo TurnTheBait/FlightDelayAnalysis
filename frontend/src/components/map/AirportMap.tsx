@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo, useRef, useCallback } from "react";
-import { MapContainer, TileLayer, CircleMarker, ZoomControl, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, CircleMarker, Marker, ZoomControl, useMap } from "react-leaflet";
+import L from "leaflet";
 import type { AirportWithCoords } from "@/lib/types";
 import AirportSearch from "./AirportSearch";
 import AirportDetailPanel from "./AirportDetailPanel";
@@ -29,6 +30,20 @@ function FlyTo({ lat, lng, zoom }: { lat: number; lng: number; zoom: number }) {
     map.flyTo([lat, lng], zoom, { duration: 1.2 });
     return null;
 }
+
+const createSonarIcon = (color: string) => {
+    return L.divIcon({
+        className: "custom-sonar-icon",
+        html: `
+            <div class="ring-container" style="--marker-color: ${color};">
+                <div class="ringring"></div>
+                <div class="circle"></div>
+            </div>
+        `,
+        iconSize: [0, 0],
+        iconAnchor: [0, 0],
+    });
+};
 
 export default function AirportMap({ airports }: Props) {
     const [selected, setSelected] = useState<AirportWithCoords | null>(null);
@@ -66,8 +81,11 @@ export default function AirportMap({ airports }: Props) {
                 {flyTarget && (
                     <FlyTo lat={flyTarget.lat} lng={flyTarget.lng} zoom={flyTarget.zoom} />
                 )}
+
                 {airports.map((a) => {
                     const isSelected = selected?.airport_code === a.airport_code;
+                    if (isSelected) return null;
+
                     return (
                         <CircleMarker
                             key={a.airport_code}
@@ -75,17 +93,25 @@ export default function AirportMap({ airports }: Props) {
                             radius={markerRadius(a.total_mentions, maxMentions)}
                             pathOptions={{
                                 fillColor: sentimentColor(a.global_weighted_sentiment),
-                                fillOpacity: isSelected ? 1 : 0.75,
-                                color: isSelected ? "#fff" : "rgba(255,255,255,0.2)",
-                                weight: isSelected ? 2.5 : 1,
+                                fillOpacity: 0.75,
+                                color: "rgba(255,255,255,0.2)",
+                                weight: 1,
                             }}
                             eventHandlers={{
                                 click: () => handleSelect(a),
                             }}
-                            className={isSelected ? "marker-selected" : ""}
                         />
                     );
                 })}
+
+                {selected && (
+                    <Marker
+                        key={`selected-${selected.airport_code}`}
+                        position={[selected.latitude_deg, selected.longitude_deg]}
+                        icon={createSonarIcon(sentimentColor(selected.global_weighted_sentiment))}
+                        zIndexOffset={1000}
+                    />
+                )}
             </MapContainer>
             {selected && (
                 <AirportDetailPanel airport={selected} onClose={handleClose} />
