@@ -178,27 +178,5 @@
       "sobrevuelo",
       "impacto acústico"
     ]
-  },
-  "FI": {
-    "delays": [
-      "myöhässä",
-      "viivästynyt",
-      "peruttu",
-      "odottaa",
-      "tuntia",
-      "jumissa",
-      "kentällä",
-      "jatkolento",
-      "lakko"
-    ],
-    "noise": [
-      "melu",
-      "lentokone",
-      "ääni",
-      "desibeli",
-      "kiitotie",
-      "lentomelu",
-      "lentoreitti"
-    ]
   }
 }
