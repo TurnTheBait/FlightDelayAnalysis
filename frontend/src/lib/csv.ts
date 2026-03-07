@@ -4,6 +4,7 @@ import Papa from "papaparse";
 import type {
     AirportSummary,
     AirportWithCoords,
+    AirportVolumeAnalysis,
     WeatherLaggedEvent,
     NoiseSentimentPopulation,
     CorrelationMatrix,
@@ -88,3 +89,8 @@ export function loadAirportsWithCoords(): AirportWithCoords[] {
             return { ...a, latitude_deg: c.latitude_deg, longitude_deg: c.longitude_deg };
         });
 }
+
+export function loadVolumeAnalysis(): AirportVolumeAnalysis[] {
+    return loadCSV<AirportVolumeAnalysis>("airport_volume_analysis_summary.csv");
+}
+

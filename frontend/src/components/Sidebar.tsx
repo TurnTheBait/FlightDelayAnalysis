@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Globe, MapPin, Clock, Cloud, Volume2, Plane, Menu, X } from "lucide-react";
+import { Globe, MapPin, BarChart3, Clock, Cloud, Volume2, Plane, Menu, X } from "lucide-react";
 
 const NAV_ITEMS = [
     { href: "/", label: "Global Summary", icon: Globe },
     { href: "/map", label: "Airport Map", icon: MapPin },
+    { href: "/volume", label: "Volume Analysis", icon: BarChart3 },
     { href: "/delays", label: "Operational Delays", icon: Clock },
     { href: "/weather", label: "Weather Impact", icon: Cloud },
     { href: "/noise", label: "Noise & Population", icon: Volume2 },
