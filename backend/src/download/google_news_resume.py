@@ -6,11 +6,9 @@ import os
 import random
 import json
 import socket
-import concurrent.futures
 import threading
 from datetime import datetime
 import cloudscraper
-from tqdm import tqdm
 
 socket.setdefaulttimeout(60)
 
@@ -22,23 +20,29 @@ AIRPORTS_CSV_PATH = os.path.join(backend_dir, 'data', 'processed', 'airports', '
 KEYWORDS_JSON_PATH = os.path.join(backend_dir, 'config', 'keywords.json')
 OUTPUT_PATH = os.path.join(backend_dir, 'data', 'raw', 'news', 'news_raw_full.csv')
 
-print_lock = threading.Lock()
-shutdown_event = threading.Event()
+file_lock = threading.Lock()
 
-COUNTRY_CONFIG = {
-    'IT': {'lang_key': 'IT', 'gl': 'IT', 'hl': 'it-IT', 'ceid': 'IT:it'},
-    'DE': {'lang_key': 'DE', 'gl': 'DE', 'hl': 'de-DE', 'ceid': 'DE:de'},
-    'AT': {'lang_key': 'DE', 'gl': 'AT', 'hl': 'de-AT', 'ceid': 'AT:de'},
-    'CH': {'lang_key': 'DE', 'gl': 'CH', 'hl': 'de-CH', 'ceid': 'CH:de'},
-    'FR': {'lang_key': 'FR', 'gl': 'FR', 'hl': 'fr-FR', 'ceid': 'FR:fr'},
-    'BE': {'lang_key': 'FR', 'gl': 'BE', 'hl': 'fr-BE', 'ceid': 'BE:fr'},
-    'ES': {'lang_key': 'ES', 'gl': 'ES', 'hl': 'es-419', 'ceid': 'ES:es'},
-    'GB': {'lang_key': 'EN', 'gl': 'GB', 'hl': 'en-GB', 'ceid': 'GB:en'},
-    'IE': {'lang_key': 'EN', 'gl': 'IE', 'hl': 'en-IE', 'ceid': 'IE:en'},
-    'US': {'lang_key': 'EN', 'gl': 'US', 'hl': 'en-US', 'ceid': 'US:en'}
+LANG_CONFIGS = {
+    'EN': {'hl': 'en-US', 'gl': 'US', 'ceid': 'US:en'},
+    'IT': {'hl': 'it-IT', 'gl': 'IT', 'ceid': 'IT:it'},
+    'DE': {'hl': 'de-DE', 'gl': 'DE', 'ceid': 'DE:de'},
+    'FR': {'hl': 'fr-FR', 'gl': 'FR', 'ceid': 'FR:fr'},
+    'ES': {'hl': 'es-419', 'gl': 'ES', 'ceid': 'ES:es'},
 }
 
-DEFAULT_CONFIG = {'lang_key': 'EN', 'gl': 'US', 'hl': 'en-US', 'ceid': 'US:en'}
+COUNTRY_LANGUAGES = {
+    'IT': ['IT', 'EN'],
+    'DE': ['DE', 'EN'],
+    'AT': ['DE', 'EN'],
+    'CH': ['DE', 'FR', 'IT', 'EN'],
+    'FR': ['FR', 'EN'],
+    'BE': ['FR', 'DE', 'EN'],
+    'LU': ['FR', 'DE', 'EN'],
+    'ES': ['ES', 'EN'],
+    'GB': ['EN'],
+    'IE': ['EN'],
+    'GI': ['EN', 'ES'],
+}
 
 def load_data():
     if not os.path.exists(AIRPORTS_CSV_PATH):
@@ -77,19 +81,19 @@ def get_processed_airports():
     
     return set()
 
-def get_config_for_country(iso_code):
-    return COUNTRY_CONFIG.get(str(iso_code).upper(), DEFAULT_CONFIG)
+def get_languages_for_country(iso_code):
+    return COUNTRY_LANGUAGES.get(str(iso_code).upper(), ['EN'])
+
+def save_airport_data(airport_news):
+    with file_lock:
+        df_chunk = pd.DataFrame(airport_news)
+        file_exists = os.path.isfile(OUTPUT_PATH) and os.path.getsize(OUTPUT_PATH) > 0
+        df_chunk.to_csv(OUTPUT_PATH, mode='a', header=not file_exists, index=False)
 
 def fetch_feed_with_retry(url, retries=5, delay=5, code="UNK"):
-    if shutdown_event.is_set():
-        return None
-
     scraper = cloudscraper.create_scraper()
 
     for attempt in range(retries):
-        if shutdown_event.is_set():
-            return None
-
         try:
             response = scraper.get(url, timeout=30)
             
@@ -98,8 +102,7 @@ def fetch_feed_with_retry(url, retries=5, delay=5, code="UNK"):
                 return feed
             elif response.status_code in [429, 503, 403]:
                 wait_time = delay * (2 ** attempt) + random.uniform(5, 10)
-                with print_lock:
-                    print(f"   [{code}] Hit {response.status_code}, cooling down {wait_time:.1f}s")
+                print(f"   [{code}] Hit {response.status_code}, cooling down {wait_time:.1f}s")
                 time.sleep(wait_time)
                 continue
             else:
@@ -108,55 +111,47 @@ def fetch_feed_with_retry(url, retries=5, delay=5, code="UNK"):
         except Exception as e:
              error_str = str(e)
              if "NameResolutionError" in error_str or "nodename nor servname" in error_str:
-                 if not shutdown_event.is_set():
-                     with print_lock:
-                         print(f"\n[CRITICAL] DNS/Network Error detected on {code}. Stopping scraper to prevent spam.")
-                     shutdown_event.set()
-                 return None
+                 wait_time = 60 * (attempt + 1)
+                 print(f"   [{code}] DNS error, waiting {wait_time}s before retry...")
+                 time.sleep(wait_time)
+                 continue
 
              if attempt < retries - 1:
                  wait_time = delay * (2 ** attempt)
                  time.sleep(wait_time)
              else:
-                 with print_lock:
-                     print(f"   [{code}] Failed: {e}")
+                 print(f"   [{code}] Failed: {e}")
     
     return None
 
-def process_airport(row, keywords_dict):
-    if shutdown_event.is_set():
-        return None
-
+def process_airport(row, keywords_dict, current_idx, total_count):
     full_name = str(row['name'])
     code = row['ident']
     iso_country = str(row['iso_country'])
     
     city_name = full_name.replace("International", "").replace("Airport", "").replace("Intl", "").split('/')[0].split('(')[0].strip()
     
-    config = get_config_for_country(iso_country)
-    lang_key = config['lang_key']
-    keywords_map = keywords_dict.get(lang_key, keywords_dict['EN'])
+    languages = get_languages_for_country(iso_country)
     
     airport_news = []
     seen_links = set()
     
-    gl = config['gl']
-    hl = config['hl']
-    ceid = config['ceid']
-    
-    with print_lock:
-        print(f"Processing MISSING: {code} ({city_name})...")
+    print(f"[{current_idx}/{total_count}] Resuming {code} ({city_name}) - langs: {languages}...")
 
-    all_phrases = []
-    for category, phrases in keywords_map.items():
-        for phrase in phrases:
-            all_phrases.append((category, phrase))
-            
-    with tqdm(total=len(all_phrases), desc=f"[{code}]", leave=False, disable=True) as pbar:
+    for lang_key in languages:
+        lang_cfg = LANG_CONFIGS.get(lang_key, LANG_CONFIGS['EN'])
+        hl = lang_cfg['hl']
+        gl = lang_cfg['gl']
+        ceid = lang_cfg['ceid']
+
+        keywords_map = keywords_dict.get(lang_key, keywords_dict['EN'])
+
+        all_phrases = []
+        for category, phrases in keywords_map.items():
+            for phrase in phrases:
+                all_phrases.append((category, phrase))
+                
         for category, phrase in all_phrases:
-            if shutdown_event.is_set():
-                return None
-
             query = f"{city_name} {phrase} after:2015-01-01"
             encoded_query = urllib.parse.quote(query)
             
@@ -185,6 +180,7 @@ def process_airport(row, keywords_dict):
                         "full_name": full_name,
                         "category": category,
                         "keyword_used": phrase,
+                        "search_language": lang_key,
                         "title": entry.title,
                         "link": entry.link,
                         "published": entry.published if 'published' in entry else date_str,
@@ -198,24 +194,24 @@ def process_airport(row, keywords_dict):
             
             time.sleep(random.uniform(2.0, 4.0))
 
-    if not airport_news and not shutdown_event.is_set():
+    if not airport_news:
         airport_news.append({
             "airport_code": code,
             "search_term": city_name,
             "full_name": full_name,
             "category": "NONE",
             "keyword_used": "NONE",
+            "search_language": "NONE",
             "title": "NO_DATA",
             "link": "NO_DATA",
             "published": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "source": "NO_DATA"
         })
 
-    if not shutdown_event.is_set():
-        with print_lock:
-             print(f"   [{code}] DONE. Saved {len(airport_news)} articles.")
+    save_airport_data(airport_news)
+    print(f"   [{code}] DONE. Saved {len(airport_news)} articles.")
          
-    return airport_news
+    return len(airport_news)
 
 def main():
     df_airports, keywords_dict = load_data()
@@ -228,39 +224,30 @@ def main():
     df_missing = df_airports[~df_airports['ident'].isin(processed_codes)]
     
     if df_missing.empty:
-        print("All airports have been processed. Exiting.")
+        print("All airports have been processed. Nothing to resume.")
         return
 
-    print(f"Resuming scraping for {len(df_missing)} remaining airports...")
+    total_missing = len(df_missing)
+    print(f"Resuming scraping for {total_missing} remaining airports (1 worker, slow mode)...")
+    start_time = time.time()
     
-    MAX_WORKERS = 1
+    total_articles = 0
+    completed = 0
+
+    for i, (index, row) in enumerate(df_missing.iterrows(), 1):
+        try:
+            count = process_airport(row, keywords_dict, i, total_missing)
+            total_articles += count
+            completed += 1
+        except Exception as exc:
+            print(f"   [{row['ident']}] Error: {exc}")
+
+    end_time = time.time()
+    duration = end_time - start_time
     
-    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        future_to_airport = {}
-        for index, row in df_missing.iterrows():
-            if shutdown_event.is_set():
-                break
-            future = executor.submit(process_airport, row, keywords_dict)
-            future_to_airport[future] = row['ident']
-        
-        for future in concurrent.futures.as_completed(future_to_airport):
-            airport_code = future_to_airport[future]
-            try:
-                data = future.result()
-                
-                if data is not None:
-                    df_chunk = pd.DataFrame(data)
-                    file_exists = os.path.isfile(OUTPUT_PATH) and os.path.getsize(OUTPUT_PATH) > 0
-                    df_chunk.to_csv(OUTPUT_PATH, mode='a', header=not file_exists, index=False)
-                    
-            except Exception as exc:
-                with print_lock:
-                    print(f"   [{airport_code}] Error: {exc}")
-
-    if shutdown_event.is_set():
-        print("\n!!! SCRAPING STOPPED EARLY DUE TO NETWORK ERRORS !!!")
-
-    print(f"\nCompleted resume job. Data appended to {OUTPUT_PATH}")
+    print(f"\nResume completed in {duration:.2f} seconds.")
+    print(f"Processed {completed}/{total_missing} airports, {total_articles} articles.")
+    print(f"File: {OUTPUT_PATH}")
 
 if __name__ == "__main__":
     main()

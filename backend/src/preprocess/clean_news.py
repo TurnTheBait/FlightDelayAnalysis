@@ -26,6 +26,39 @@ AVIATION_CONTEXT_KEYWORDS = [
     'enac', 'iata', 'icao', 'atc', 'controllo traffico', 'air traffic'
 ]
 
+FALSE_POSITIVE_EXCLUSIONS = [
+    'runway run', 'corsa podistica', 'maratona', 'marathon', 'mezza maratona',
+    'half marathon', 'lauf', 'halbmarathon', 'carrera popular',
+    'jogging', 'runner', 'running', 'atletica', 'leichtathletik',
+
+    'fashion week', 'sfilata', 'modenschau', 'défilé', 'pasarela',
+    'haute couture', 'prêt-à-porter', 'collezione',
+
+    'formula 1', 'formula uno', 'motogp', 'gran premio', 'grand prix',
+    'nascar', 'rally', 'rallye', 'autodromo', 'circuito',
+    'gara automobilistica', 'rennsport',
+
+    'serie a', 'serie b', 'champions league',
+    'bundesliga', 'premier league', 'la liga', 'ligue 1',
+    'calcio', 'fußball', 'fútbol', 'football',
+    'basketball', 'pallacanestro', 'tennis', 'rugby',
+    'ciclismo', 'radfahren', 'cyclisme', 'ciclismo', 'tour de france',
+    'giro d\'italia', 'vuelta',
+
+    'cinema', 'film', 'serie tv', 'netflix', 'teatro',
+    'concerto', 'festival musicale', 'musikfestival',
+    'videogame', 'videogioco', 'videospiel',
+
+    'borsa', 'azioni', 'aktien', 'bourse', 'bolsa',
+    'criptovaluta', 'bitcoin', 'kryptowährung',
+
+    'ricetta', 'rezept', 'recette', 'receta',
+    'ristorante', 'restaurant', 'restaurante',
+
+    'meteo domani', 'previsioni meteo', 'wettervorhersage', 'météo',
+    'pronóstico del tiempo',
+]
+
 def load_sentiment_keywords(json_path):
     if not os.path.exists(json_path):
         print(f"Error: Keywords JSON not found at {json_path}")
@@ -60,8 +93,14 @@ def build_regex_pattern(keywords):
     
     return re.compile(pattern, re.IGNORECASE)
 
-def is_strictly_relevant(row, context_pattern, sentiment_pattern):
+def contains_exclusion(text, exclusion_pattern):
+    return bool(exclusion_pattern.search(text))
+
+def is_strictly_relevant(row, context_pattern, sentiment_pattern, exclusion_pattern):
     title = clean_text(str(row.get('title', '')))
+    
+    if contains_exclusion(title, exclusion_pattern):
+        return False
     
     has_aviation_context = bool(context_pattern.search(title))
     has_sentiment_keyword = bool(sentiment_pattern.search(title))
@@ -83,6 +122,7 @@ def main():
     print(f"Compiling Regex Patterns with Word Boundaries (\\b)...")
     context_pattern = build_regex_pattern(AVIATION_CONTEXT_KEYWORDS)
     sentiment_pattern = build_regex_pattern(sentiment_keywords)
+    exclusion_pattern = build_regex_pattern(FALSE_POSITIVE_EXCLUSIONS)
     print(f"Reading raw news from: {INPUT_FILE}")
     try:
         df = pd.read_csv(INPUT_FILE)
@@ -101,7 +141,7 @@ def main():
     else:
         print("Warning: 'published' column not found, skipping date filter.")
 
-    df_filtered = df[df.apply(lambda row: is_strictly_relevant(row, context_pattern, sentiment_pattern), axis=1)]
+    df_filtered = df[df.apply(lambda row: is_strictly_relevant(row, context_pattern, sentiment_pattern, exclusion_pattern), axis=1)]
     
     df_filtered = df_filtered.drop_duplicates(subset=['title', 'link'])
     

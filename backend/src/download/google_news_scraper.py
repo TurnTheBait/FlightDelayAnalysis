@@ -10,7 +10,6 @@ import concurrent.futures
 import threading
 from datetime import datetime
 import cloudscraper
-from tqdm import tqdm
 
 socket.setdefaulttimeout(60)
 
@@ -23,22 +22,32 @@ KEYWORDS_JSON_PATH = os.path.join(backend_dir, 'config', 'keywords.json')
 OUTPUT_PATH = os.path.join(backend_dir, 'data', 'raw', 'news', 'news_raw_full.csv')
 
 print_lock = threading.Lock()
+file_lock = threading.Lock()
 shutdown_event = threading.Event()
+rate_limit_hits = 0
+rate_limit_lock = threading.Lock()
 
-COUNTRY_CONFIG = {
-    'IT': {'lang_key': 'IT', 'gl': 'IT', 'hl': 'it-IT', 'ceid': 'IT:it'},
-    'DE': {'lang_key': 'DE', 'gl': 'DE', 'hl': 'de-DE', 'ceid': 'DE:de'},
-    'AT': {'lang_key': 'DE', 'gl': 'AT', 'hl': 'de-AT', 'ceid': 'AT:de'},
-    'CH': {'lang_key': 'DE', 'gl': 'CH', 'hl': 'de-CH', 'ceid': 'CH:de'},
-    'FR': {'lang_key': 'FR', 'gl': 'FR', 'hl': 'fr-FR', 'ceid': 'FR:fr'},
-    'BE': {'lang_key': 'FR', 'gl': 'BE', 'hl': 'fr-BE', 'ceid': 'BE:fr'},
-    'ES': {'lang_key': 'ES', 'gl': 'ES', 'hl': 'es-419', 'ceid': 'ES:es'},
-    'GB': {'lang_key': 'EN', 'gl': 'GB', 'hl': 'en-GB', 'ceid': 'GB:en'},
-    'IE': {'lang_key': 'EN', 'gl': 'IE', 'hl': 'en-IE', 'ceid': 'IE:en'},
-    'US': {'lang_key': 'EN', 'gl': 'US', 'hl': 'en-US', 'ceid': 'US:en'}
+LANG_CONFIGS = {
+    'EN': {'hl': 'en-US', 'gl': 'US', 'ceid': 'US:en'},
+    'IT': {'hl': 'it-IT', 'gl': 'IT', 'ceid': 'IT:it'},
+    'DE': {'hl': 'de-DE', 'gl': 'DE', 'ceid': 'DE:de'},
+    'FR': {'hl': 'fr-FR', 'gl': 'FR', 'ceid': 'FR:fr'},
+    'ES': {'hl': 'es-419', 'gl': 'ES', 'ceid': 'ES:es'},
 }
 
-DEFAULT_CONFIG = {'lang_key': 'EN', 'gl': 'US', 'hl': 'en-US', 'ceid': 'US:en'}
+COUNTRY_LANGUAGES = {
+    'IT': ['IT', 'EN'],
+    'DE': ['DE', 'EN'],
+    'AT': ['DE', 'EN'],
+    'CH': ['DE', 'FR', 'IT', 'EN'],
+    'FR': ['FR', 'EN'],
+    'BE': ['FR', 'DE', 'EN'],
+    'LU': ['FR', 'DE', 'EN'],
+    'ES': ['ES', 'EN'],
+    'GB': ['EN'],
+    'IE': ['EN'],
+    'GI': ['EN', 'ES'],
+}
 
 def load_data():
     if not os.path.exists(AIRPORTS_CSV_PATH):
@@ -64,8 +73,43 @@ def load_data():
         
     return df_airports, keywords_dict
 
-def get_config_for_country(iso_code):
-    return COUNTRY_CONFIG.get(str(iso_code).upper(), DEFAULT_CONFIG)
+def get_processed_airports():
+    if not os.path.exists(OUTPUT_PATH):
+        return set()
+    
+    try:
+        df_existing = pd.read_csv(OUTPUT_PATH)
+        if 'airport_code' in df_existing.columns:
+            return set(df_existing['airport_code'].unique())
+    except Exception:
+        pass
+    
+    return set()
+
+def get_languages_for_country(iso_code):
+    return COUNTRY_LANGUAGES.get(str(iso_code).upper(), ['EN'])
+
+def get_adaptive_delay():
+    global rate_limit_hits
+    with rate_limit_lock:
+        extra = rate_limit_hits * 0.5
+    base = random.uniform(1.0, 2.0)
+    return min(base + extra, 15.0)
+
+def register_rate_limit():
+    global rate_limit_hits
+    with rate_limit_lock:
+        rate_limit_hits += 1
+        current = rate_limit_hits
+    if current % 5 == 0:
+        with print_lock:
+            print(f"[THROTTLE] {current} rate-limits received, adaptive delay now ~{1.5 + current * 0.5:.1f}s")
+
+def save_airport_data(airport_news):
+    with file_lock:
+        df_chunk = pd.DataFrame(airport_news)
+        file_exists = os.path.isfile(OUTPUT_PATH) and os.path.getsize(OUTPUT_PATH) > 0
+        df_chunk.to_csv(OUTPUT_PATH, mode='a', header=not file_exists, index=False)
 
 def fetch_feed_with_retry(url, retries=3, delay=2, code="UNK"):
     if shutdown_event.is_set():
@@ -84,6 +128,7 @@ def fetch_feed_with_retry(url, retries=3, delay=2, code="UNK"):
                 feed = feedparser.parse(response.content)
                 return feed
             elif response.status_code in [429, 503, 403]:
+                register_rate_limit()
                 wait_time = delay * (1.5 ** attempt) + random.uniform(1, 3)
                 time.sleep(wait_time)
                 continue
@@ -95,7 +140,7 @@ def fetch_feed_with_retry(url, retries=3, delay=2, code="UNK"):
              if "NameResolutionError" in error_str or "nodename nor servname" in error_str:
                  if not shutdown_event.is_set():
                      with print_lock:
-                         print(f"\n[CRITICAL] DNS/Network Error detected on {code}. Stopping scraper to prevent spam.")
+                         print(f"\n[BLOCKED] DNS blocked on {code}. Stopping fast scraper, resume script will handle the rest.")
                      shutdown_event.set()
                  return None
 
@@ -117,26 +162,30 @@ def process_airport(row, keywords_dict, current_idx, total_count):
     
     city_name = full_name.replace("International", "").replace("Airport", "").replace("Intl", "").split('/')[0].split('(')[0].strip()
     
-    config = get_config_for_country(iso_country)
-    lang_key = config['lang_key']
-    keywords_map = keywords_dict.get(lang_key, keywords_dict['EN'])
+    languages = get_languages_for_country(iso_country)
     
     airport_news = []
     seen_links = set()
     
-    gl = config['gl']
-    hl = config['hl']
-    ceid = config['ceid']
-    
     with print_lock:
-        print(f"[{current_idx}/{total_count}] Processing {code} ({city_name})...")
+        print(f"[{current_idx}/{total_count}] Processing {code} ({city_name}) - langs: {languages}...")
 
-    all_phrases = []
-    for category, phrases in keywords_map.items():
-        for phrase in phrases:
-            all_phrases.append((category, phrase))
-            
-    with tqdm(total=len(all_phrases), desc=f"[{code}]", leave=False, disable=True) as pbar:
+    for lang_key in languages:
+        if shutdown_event.is_set():
+            return None
+
+        lang_cfg = LANG_CONFIGS.get(lang_key, LANG_CONFIGS['EN'])
+        hl = lang_cfg['hl']
+        gl = lang_cfg['gl']
+        ceid = lang_cfg['ceid']
+
+        keywords_map = keywords_dict.get(lang_key, keywords_dict['EN'])
+
+        all_phrases = []
+        for category, phrases in keywords_map.items():
+            for phrase in phrases:
+                all_phrases.append((category, phrase))
+                
         for category, phrase in all_phrases:
             if shutdown_event.is_set():
                 return None
@@ -169,6 +218,7 @@ def process_airport(row, keywords_dict, current_idx, total_count):
                         "full_name": full_name,
                         "category": category,
                         "keyword_used": phrase,
+                        "search_language": lang_key,
                         "title": entry.title,
                         "link": entry.link,
                         "published": entry.published if 'published' in entry else date_str,
@@ -180,7 +230,7 @@ def process_airport(row, keywords_dict, current_idx, total_count):
             except Exception as e:
                 pass
             
-            time.sleep(random.uniform(1.0, 2.0))
+            time.sleep(get_adaptive_delay())
 
     if not airport_news and not shutdown_event.is_set():
         airport_news.append({
@@ -189,63 +239,80 @@ def process_airport(row, keywords_dict, current_idx, total_count):
             "full_name": full_name,
             "category": "NONE",
             "keyword_used": "NONE",
+            "search_language": "NONE",
             "title": "NO_DATA",
             "link": "NO_DATA",
             "published": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "source": "NO_DATA"
         })
 
-    if not shutdown_event.is_set():
+    if airport_news and not shutdown_event.is_set():
+        save_airport_data(airport_news)
         with print_lock:
              print(f"   [{code}] DONE. Saved {len(airport_news)} articles.")
          
-    return airport_news
+    return len(airport_news) if not shutdown_event.is_set() else None
 
 def main():
     df_airports, keywords_dict = load_data()
     if df_airports is None:
         return
 
-    all_news = []
-    total_airports = len(df_airports)
+    os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
+
+    processed_codes = get_processed_airports()
+    if processed_codes:
+        print(f"Found {len(processed_codes)} airports already processed, skipping them.")
+
+    df_todo = df_airports[~df_airports['ident'].isin(processed_codes)]
     
+    if df_todo.empty:
+        print("All airports have been processed. Nothing to do.")
+        return
+
+    total_airports = len(df_todo)
     MAX_WORKERS = 5
     
-    print(f"Starting Google News scraping for {total_airports} airports ({MAX_WORKERS} workers)...")
+    print(f"Scraping {total_airports} airports ({MAX_WORKERS} workers)...")
     start_time = time.time()
     
+    total_articles = 0
+    completed = 0
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         future_to_airport = {}
         
-        for i, (index, row) in enumerate(df_airports.iterrows(), 1):
+        for i, (index, row) in enumerate(df_todo.iterrows(), 1):
             if shutdown_event.is_set():
                 break
             future = executor.submit(process_airport, row, keywords_dict, i, total_airports)
             future_to_airport[future] = row['ident']
         
         for future in concurrent.futures.as_completed(future_to_airport):
+            airport_code = future_to_airport[future]
             try:
-                data = future.result()
-                if data is not None:
-                    all_news.extend(data)
+                count = future.result()
+                if count is not None:
+                    total_articles += count
+                    completed += 1
             except Exception as exc:
-                pass
+                with print_lock:
+                    print(f"   [{airport_code}] Error: {exc}")
 
-    if shutdown_event.is_set():
-        print("\n!!! SCRAPING STOPPED EARLY DUE TO NETWORK ERRORS !!!")
-        print("Saving partial results so you can resume later...")
-
-    df_news = pd.DataFrame(all_news)
-    
-    os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
-    df_news.to_csv(OUTPUT_PATH, index=False)
-    
     end_time = time.time()
     duration = end_time - start_time
     
-    print(f"\nDone in {duration:.2f} seconds.")
-    print(f"Collected {len(df_news)} unique articles.")
-    print(f"File saved to: {OUTPUT_PATH}")
+    final_processed = len(get_processed_airports())
+
+    if shutdown_event.is_set():
+        print(f"\nFast scraper blocked after {completed} airports in {duration:.2f}s.")
+        print(f"Total processed so far: {final_processed}/{len(df_airports)}.")
+        print("The resume script will handle the remaining airports.")
+    else:
+        print(f"\nDone in {duration:.2f} seconds.")
+        print(f"Completed {final_processed}/{len(df_airports)} airports, {total_articles} articles.")
+    
+    print(f"File: {OUTPUT_PATH}")
 
 if __name__ == "__main__":
     main()
