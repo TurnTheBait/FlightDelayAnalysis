@@ -61,7 +61,7 @@ export function loadNoisePopulationData(): NoiseSentimentPopulation[] {
 }
 
 export function loadAirportsWithCoords(): AirportWithCoords[] {
-    const airports = loadAirportSummary();
+    const airports = loadVolumeAnalysis();
     const coordsPath = path.resolve(
         process.cwd(),
         "..",

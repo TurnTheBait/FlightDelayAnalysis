@@ -56,6 +56,7 @@ export default function AirportDetailPanel({ airport, onClose }: Props) {
             <div className="detail-panel__section">
                 <div className="detail-panel__section-title">Sentiment Scores</div>
                 <div className="detail-metrics-row">
+                    <Badge value={a.composite_score} label="Composite" />
                     <Badge value={a.global_weighted_sentiment} label="Global" />
                     <Badge value={a.delay_weighted_sentiment} label="Delay" />
                     <Badge value={a.noise_weighted_sentiment} label="Noise" />
@@ -76,9 +77,10 @@ export default function AirportDetailPanel({ airport, onClose }: Props) {
             <div className="detail-panel__divider" />
 
             <div className="detail-panel__section">
-                <div className="detail-panel__section-title">Review Volume</div>
-                <div className="detail-stats-grid">
-                    <Stat value={a.total_mentions.toLocaleString()} label="Total" />
+                <div className="detail-panel__section-title">Review Volume & Flights</div>
+                <div className="detail-stats-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+                    <Stat value={a.total_flights.toLocaleString()} label="Flights" />
+                    <Stat value={a.total_mentions.toLocaleString()} label="Mentions" />
                     <Stat value={a.delay_reviews_count?.toLocaleString() ?? "N/A"} label="Delay" />
                     <Stat value={a.noise_reviews_count?.toLocaleString() ?? "N/A"} label="Noise" />
                 </div>

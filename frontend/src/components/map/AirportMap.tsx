@@ -92,7 +92,7 @@ export default function AirportMap({ airports }: Props) {
                             center={[a.latitude_deg, a.longitude_deg]}
                             radius={markerRadius(a.total_mentions, maxMentions)}
                             pathOptions={{
-                                fillColor: sentimentColor(a.global_weighted_sentiment),
+                                fillColor: sentimentColor(a.composite_score),
                                 fillOpacity: 0.75,
                                 color: "rgba(255,255,255,0.2)",
                                 weight: 1,
@@ -108,7 +108,7 @@ export default function AirportMap({ airports }: Props) {
                     <Marker
                         key={`selected-${selected.airport_code}`}
                         position={[selected.latitude_deg, selected.longitude_deg]}
-                        icon={createSonarIcon(sentimentColor(selected.global_weighted_sentiment))}
+                        icon={createSonarIcon(sentimentColor(selected.composite_score))}
                         zIndexOffset={1000}
                     />
                 )}
