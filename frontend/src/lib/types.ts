@@ -42,7 +42,9 @@ export interface NoiseSentimentPopulation {
     airport_code: string;
     name: string;
     avg_sentiment: number;
-    population_10km: number;
+    population_20km: number;
+    noise_review_count: number;
+    total_flights: number;
 }
 
 export interface AirportWithCoords extends AirportVolumeAnalysis {

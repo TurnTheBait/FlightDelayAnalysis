@@ -18,6 +18,7 @@ scripts = [
     "src/analysis/calculate_scores.py",
     "src/analysis/summary.py",
     "src/analysis/flight_volume_analysis.py",
+    "src/analysis/airport_category_benchmarking.py",
     "src/analysis/merge_weather_data.py",
     "src/analysis/sentiment_weather_correlation.py",
     "src/plots/plot_results.py",

@@ -15,7 +15,7 @@ export default function NoisePage() {
         airports.length;
 
     const highestPop = [...population].sort(
-        (a, b) => b.population_10km - a.population_10km
+        (a, b) => b.population_20km - a.population_20km
     )[0];
 
     const lowestSentiment = [...airports].sort(
@@ -38,7 +38,7 @@ export default function NoisePage() {
                     <h1 className="page-header__title">Noise & Population</h1>
                     <p className="page-header__subtitle">
                         Analyzing the relationship between airport noise sentiment and the
-                        population living within a 10km radius, calculated using WorldPop
+                        population living within a 20km radius, calculated using WorldPop
                         GeoTIFF raster data.
                     </p>
                 </header>
@@ -54,7 +54,7 @@ export default function NoisePage() {
                     <div className="kpi-card__label">Highest Population Exposure</div>
                     <div className="kpi-card__value">{highestPop.airport_code}</div>
                     <div className="kpi-card__sub">
-                        {Math.round(highestPop.population_10km).toLocaleString()} residents
+                        {Math.round(highestPop.population_20km).toLocaleString()} residents
                     </div>
                 </FadeIn>
                 <FadeIn delay={0.15} className="kpi-card">

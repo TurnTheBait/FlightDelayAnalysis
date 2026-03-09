@@ -26,8 +26,8 @@ if df.empty or 'delay_reviews_count' not in df.columns or 'noise_reviews_count' 
 pop_file = os.path.join(backend_dir, 'results', 'tables', 'noise_sentiment_10km_population.csv')
 if os.path.exists(pop_file):
     df_pop = pd.read_csv(pop_file)
-    if 'airport_code' in df_pop.columns and 'population_10km' in df_pop.columns:
-        df = df.merge(df_pop[['airport_code', 'population_10km']], on='airport_code', how='left')
+    if 'airport_code' in df_pop.columns and 'population_20km' in df_pop.columns:
+        df = df.merge(df_pop[['airport_code', 'population_20km']], on='airport_code', how='left')
 
 df['delay_pressure'] = np.log1p(df['delay_reviews_count'])
 df['noise_pressure'] = np.log1p(df['noise_reviews_count'])
@@ -77,8 +77,8 @@ print(f"Salvato il plot pressione mediatica in {results_dir}")
 
 print("Calcolando le correlazioni tra pressione mediatica e sentiment...")
 correlation_vars = ['delay_pressure', 'noise_pressure', 'delay_weighted_sentiment', 'noise_weighted_sentiment']
-if 'population_10km' in df.columns:
-    correlation_vars.append('population_10km')
+if 'population_20km' in df.columns:
+    correlation_vars.append('population_20km')
 
 df_corr = df[correlation_vars].copy()
 correlation_matrix = df_corr.corr(method='pearson')

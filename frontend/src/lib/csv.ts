@@ -56,7 +56,7 @@ export function loadCorrelationData(): CorrelationMatrix {
 
 export function loadNoisePopulationData(): NoiseSentimentPopulation[] {
     return loadCSV<NoiseSentimentPopulation>(
-        "noise_sentiment_10km_population.csv"
+        "population_analysis/population_sentiment_noise_raster.csv"
     );
 }
 
