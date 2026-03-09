@@ -19,8 +19,8 @@ os.makedirs(TABLES_DIR, exist_ok=True)
 
 CATEGORY_THRESHOLDS = [
     ('Hub',    100000, float('inf')),
-    ('Large',  20000,  99999),
-    ('Medium', 5000,   19999),
+    ('Large',  40000,  99999),
+    ('Medium', 5000,   39999),
     ('Small',  0,      4999),
 ]
 
@@ -126,7 +126,7 @@ def plot_category_benchmark(df_table, cat_name, cat_mean, mode):
     path = os.path.join(FIGURES_DIR, fname)
     fig.savefig(path, dpi=300, bbox_inches='tight')
     plt.close(fig)
-    print(f'  ✅ Saved figure → {fname}')
+    print(f' Saved figure → {fname}')
     return path
 
 
@@ -183,13 +183,13 @@ def main():
 
             csv_name = f'benchmarking_{mode}_{cat_name.lower()}.csv'
             df_table.to_csv(os.path.join(TABLES_DIR, csv_name), index=False)
-            print(f'  ✅ Saved table  → {csv_name}')
+            print(f' Saved table  → {csv_name}')
             plot_category_benchmark(df_table, cat_name, cat_mean, mode)
 
         df_summary = build_summary_table(results, mode)
         summary_path = os.path.join(TABLES_DIR, f'summary_{mode}.csv')
         df_summary.to_csv(summary_path, index=False)
-        print(f'  ✅ Saved summary → summary_{mode}.csv')
+        print(f' Saved summary → summary_{mode}.csv')
 
     print('\n All done. Outputs in:')
     print(f'   Figures: {FIGURES_DIR}')
