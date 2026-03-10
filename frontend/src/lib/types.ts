@@ -47,6 +47,17 @@ export interface NoiseSentimentPopulation {
     total_flights: number;
 }
 
+export interface CategoryBenchmarkSummary {
+    category: string;
+    n_airports: number;
+    mean_sentiment: number;
+    std_sentiment: number;
+    min_sentiment: number;
+    max_sentiment: number;
+    best_airport: string;
+    worst_airport: string;
+}
+
 export interface AirportWithCoords extends AirportVolumeAnalysis {
     latitude_deg: number;
     longitude_deg: number;

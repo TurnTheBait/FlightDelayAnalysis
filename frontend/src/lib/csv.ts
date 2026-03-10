@@ -94,3 +94,7 @@ export function loadVolumeAnalysis(): AirportVolumeAnalysis[] {
     return loadCSV<AirportVolumeAnalysis>("airport_volume_analysis_summary.csv");
 }
 
+export function loadCategoryBenchmarkSummary(): import("./types").CategoryBenchmarkSummary[] {
+    return loadCSV<import("./types").CategoryBenchmarkSummary>("category_benchmarking/summary_general.csv");
+}
+

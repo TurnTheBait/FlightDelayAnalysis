@@ -33,24 +33,24 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
                 {d.airport_code} &ndash; {d.name}
             </div>
             <div className="custom-tooltip__value">
-                Noise Sentiment: {d.avg_sentiment.toFixed(2)}
+                Noise Reviews: {d.noise_review_count}
             </div>
             <div className="custom-tooltip__value">
-                Noise Reviews: {d.noise_review_count}
+                Population (20km): {Math.round(d.population_20km).toLocaleString()}
             </div>
             <div className="custom-tooltip__value">
                 Total Flights: {d.total_flights.toLocaleString()}
             </div>
-            <div className="custom-tooltip__value">
-                Population (20km): {Math.round(d.population_20km).toLocaleString()}
+            <div className="custom-tooltip__value" style={{ marginTop: '4px', color: sentimentColor(d.avg_sentiment) }}>
+                Avg Sentiment: {d.avg_sentiment.toFixed(2)}
             </div>
         </div>
     );
 }
 
 function sentimentColor(val: number): string {
-    if (val >= 7.0) return "#3fb950";
-    if (val >= 5.0) return "#5e6ad2";
+    if (val >= 6.0) return "#3fb950";
+    if (val >= 4.5) return "#5e6ad2";
     if (val >= 3.0) return "#d29922";
     return "#f85149";
 }
@@ -83,15 +83,16 @@ export default function NoisePopulationScatter({ data }: Props) {
                         }}
                     />
                     <YAxis
-                        dataKey="avg_sentiment"
+                        dataKey="noise_review_count"
                         type="number"
-                        domain={[0, 10]}
-                        name="Noise Sentiment"
+                        scale="log"
+                        domain={["auto", "auto"]}
+                        name="Noise Reviews"
                         tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
                         axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
                         tickLine={false}
                         label={{
-                            value: "Avg Noise Sentiment",
+                            value: "Total Noise Reviews (log scale)",
                             angle: -90,
                             position: "insideLeft",
                             offset: 4,
@@ -99,7 +100,7 @@ export default function NoisePopulationScatter({ data }: Props) {
                             fontSize: 11,
                         }}
                     />
-                    <ZAxis dataKey="total_flights" range={[50, 400]} />
+                    <ZAxis dataKey="total_flights" range={[40, 600]} name="Flights" />
                     <Tooltip content={<CustomTooltip />} cursor={false} />
                     <Scatter data={data} strokeWidth={1} stroke="rgba(255,255,255,0.1)">
                         {data.map((entry, i) => (
