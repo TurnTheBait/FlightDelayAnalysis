@@ -54,19 +54,19 @@ export default function VolumeRankingChart({ data }: Props) {
                 >
                     <XAxis
                         type="number"
-                        tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
-                        axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
+                        tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
+                        axisLine={{ stroke: "var(--chart-grid)" }}
                         tickLine={false}
                     />
                     <YAxis
                         dataKey="airport_code"
                         type="category"
                         width={40}
-                        tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 11 }}
+                        tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
                         axisLine={false}
                         tickLine={false}
                     />
-                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "var(--chart-cursor)" }} />
                     <Bar dataKey="composite_score" radius={[0, 4, 4, 0]}>
                         {data.map((entry, i) => (
                             <Cell key={i} fill={barColor(entry.composite_score)} fillOpacity={0.8} />

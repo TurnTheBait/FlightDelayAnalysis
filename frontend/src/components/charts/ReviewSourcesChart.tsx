@@ -47,21 +47,21 @@ export default function ReviewSourcesChart({ data }: Props) {
                 >
                     <XAxis
                         type="number"
-                        tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
-                        axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
+                        tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
+                        axisLine={{ stroke: "var(--chart-grid)" }}
                         tickLine={false}
                     />
                     <YAxis
                         dataKey="airport_code"
                         type="category"
                         width={40}
-                        tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 11 }}
+                        tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
                         axisLine={false}
                         tickLine={false}
                     />
-                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "var(--chart-cursor)" }} />
                     <Legend
-                        wrapperStyle={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}
+                        wrapperStyle={{ fontSize: 11, color: "var(--chart-label)" }}
                     />
                     <Bar
                         dataKey="skytrax"

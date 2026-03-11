@@ -60,14 +60,14 @@ export default function ReliabilityMatrix({ data }: Props) {
                         dataKey="pressure_index"
                         type="number"
                         name="Media Pressure"
-                        tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
-                        axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
+                        tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
+                        axisLine={{ stroke: "var(--chart-grid)" }}
                         tickLine={false}
                         label={{
                             value: "Media Pressure Index",
                             position: "bottom",
                             offset: 4,
-                            fill: "rgba(255,255,255,0.35)",
+                            fill: "var(--chart-label)",
                             fontSize: 11,
                         }}
                     />
@@ -76,15 +76,15 @@ export default function ReliabilityMatrix({ data }: Props) {
                         type="number"
                         name="Sentiment"
                         domain={[3, 8]}
-                        tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
-                        axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
+                        tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
+                        axisLine={{ stroke: "var(--chart-grid)" }}
                         tickLine={false}
                         label={{
                             value: "Global Sentiment",
                             angle: -90,
                             position: "insideLeft",
                             offset: 4,
-                            fill: "rgba(255,255,255,0.35)",
+                            fill: "var(--chart-label)",
                             fontSize: 11,
                         }}
                     />
@@ -94,7 +94,7 @@ export default function ReliabilityMatrix({ data }: Props) {
                         name="Mentions"
                     />
                     <Tooltip content={<CustomTooltip />} cursor={false} />
-                    <Scatter data={data} strokeWidth={1} stroke="rgba(255,255,255,0.1)">
+                    <Scatter data={data} strokeWidth={1} stroke="var(--chart-cursor)">
                         {data.map((entry, i) => (
                             <Cell
                                 key={i}

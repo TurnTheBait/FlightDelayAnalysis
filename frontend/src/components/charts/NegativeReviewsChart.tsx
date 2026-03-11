@@ -54,26 +54,26 @@ export default function NegativeReviewsChart({ data }: Props) {
                 >
                     <XAxis
                         dataKey="label"
-                        tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
-                        axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
+                        tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
+                        axisLine={{ stroke: "var(--chart-grid)" }}
                         tickLine={false}
                     />
                     <YAxis
-                        tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
-                        axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
+                        tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
+                        axisLine={{ stroke: "var(--chart-grid)" }}
                         tickLine={false}
                         label={{
                             value: "Avg Negative Count",
                             angle: -90,
                             position: "insideLeft",
                             offset: 4,
-                            fill: "rgba(255,255,255,0.35)",
+                            fill: "var(--chart-label)",
                             fontSize: 11,
                         }}
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend
-                        wrapperStyle={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}
+                        wrapperStyle={{ fontSize: 11, color: "var(--chart-label)" }}
                     />
                     {LINES.map((l) => (
                         <Line
@@ -84,7 +84,7 @@ export default function NegativeReviewsChart({ data }: Props) {
                             stroke={l.color}
                             strokeWidth={2}
                             dot={{ r: 4, fill: l.color }}
-                            activeDot={{ r: 6, stroke: l.color, strokeWidth: 2, fill: "#050506" }}
+                            activeDot={{ r: 6, stroke: l.color, strokeWidth: 2, fill: "var(--bg-base)" }}
                             connectNulls
                         />
                     ))}

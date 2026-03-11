@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
+import ThemeToggle from "@/components/ThemeToggle";
 
 export const metadata: Metadata = {
   title: "FlightPulse - Aviation Data Dashboard",
@@ -16,8 +17,20 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (localStorage.getItem('theme') === 'light') {
+                  document.documentElement.setAttribute('data-theme', 'light');
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
         <div className="ambient-blob ambient-blob--primary" />
         <div className="ambient-blob ambient-blob--secondary" />
+        <ThemeToggle />
         <div className="app-shell">
           <Sidebar />
           <main className="main-content">{children}</main>

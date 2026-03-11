@@ -24,11 +24,11 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: any })
             <div className="custom-tooltip__value">
                 Count: {d.n_airports}
             </div>
-            <div className="custom-tooltip__divider" style={{ margin: "8px 0", height: "1px", background: "rgba(255,255,255,0.1)" }} />
+            <div className="custom-tooltip__divider" style={{ margin: "8px 0", height: "1px", background: "var(--chart-grid)" }} />
             <div className="custom-tooltip__value" style={{ color: "#3fb950" }}>
                 High: {d.max_sentiment.toFixed(2)} ({d.best_airport})
             </div>
-            <div className="custom-tooltip__value" style={{ fontWeight: 600, color: "#fff", margin: "4px 0" }}>
+            <div className="custom-tooltip__value" style={{ fontWeight: 600, color: "var(--text-primary)", margin: "4px 0" }}>
                 Mean: {d.mean_sentiment.toFixed(2)}
             </div>
             <div className="custom-tooltip__value" style={{ color: "#f85149" }}>
@@ -55,7 +55,7 @@ const renderMeanDot = (props: any) => {
             cy={cy}
             r={6}
             fill={scoreColor(payload.mean_sentiment)}
-            stroke="#050506"
+            stroke="var(--bg-base)"
             strokeWidth={2}
         />
     );
@@ -78,23 +78,23 @@ export default function CategoryBenchmarkChart({ data }: Props) {
                     <XAxis
                         type="number"
                         domain={[1, 10]}
-                        tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
-                        axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
+                        tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
+                        axisLine={{ stroke: "var(--chart-grid)" }}
                         tickLine={false}
                     />
                     <YAxis
                         dataKey="category"
                         type="category"
-                        tick={{ fill: "rgba(255,255,255,0.7)", fontSize: 12, fontWeight: 500 }}
+                        tick={{ fill: "var(--chart-axis)", fontSize: 12, fontWeight: 500 }}
                         axisLine={false}
                         tickLine={false}
                         width={60}
                     />
-                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "var(--chart-cursor)" }} />
 
                     <Bar
                         dataKey="sentimentRange"
-                        fill="rgba(255,255,255,0.1)"
+                        fill="var(--chart-grid)"
                         barSize={24}
                         radius={12}
                     />

@@ -66,8 +66,8 @@ export default function NoisePopulationScatter({ data }: Props) {
                         scale="log"
                         domain={["auto", "auto"]}
                         name="Population"
-                        tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
-                        axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
+                        tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
+                        axisLine={{ stroke: "var(--chart-grid)" }}
                         tickLine={false}
                         tickFormatter={(v: number) =>
                             v >= 1000000
@@ -78,7 +78,7 @@ export default function NoisePopulationScatter({ data }: Props) {
                             value: "Population within 20km (log scale)",
                             position: "bottom",
                             offset: 4,
-                            fill: "rgba(255,255,255,0.35)",
+                            fill: "var(--chart-label)",
                             fontSize: 11,
                         }}
                     />
@@ -88,21 +88,21 @@ export default function NoisePopulationScatter({ data }: Props) {
                         scale="log"
                         domain={["auto", "auto"]}
                         name="Noise Reviews"
-                        tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
-                        axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
+                        tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
+                        axisLine={{ stroke: "var(--chart-grid)" }}
                         tickLine={false}
                         label={{
                             value: "Total Noise Reviews (log scale)",
                             angle: -90,
                             position: "insideLeft",
                             offset: 4,
-                            fill: "rgba(255,255,255,0.35)",
+                            fill: "var(--chart-label)",
                             fontSize: 11,
                         }}
                     />
                     <ZAxis dataKey="total_flights" range={[40, 600]} name="Flights" />
                     <Tooltip content={<CustomTooltip />} cursor={false} />
-                    <Scatter data={data} strokeWidth={1} stroke="rgba(255,255,255,0.1)">
+                    <Scatter data={data} strokeWidth={1} stroke="var(--chart-cursor)">
                         {data.map((entry, i) => (
                             <Cell
                                 key={i}

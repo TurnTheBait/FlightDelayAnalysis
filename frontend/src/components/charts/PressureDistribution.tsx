@@ -37,23 +37,23 @@ export default function PressureDistribution({ data }: Props) {
                 <BarChart data={data} margin={{ top: 10, right: 20, bottom: 20, left: 10 }}>
                     <XAxis
                         dataKey="label"
-                        tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
-                        axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
+                        tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
+                        axisLine={{ stroke: "var(--chart-grid)" }}
                         tickLine={false}
                         label={{
                             value: "Pressure Index Range",
                             position: "bottom",
                             offset: 4,
-                            fill: "rgba(255,255,255,0.35)",
+                            fill: "var(--chart-label)",
                             fontSize: 11,
                         }}
                     />
                     <YAxis
-                        tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
-                        axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
+                        tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
+                        axisLine={{ stroke: "var(--chart-grid)" }}
                         tickLine={false}
                     />
-                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
+                    <Tooltip content={<CustomTooltip />} cursor={{ fill: "var(--chart-cursor)" }} />
                     <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                         {data.map((_, i) => (
                             <Cell

@@ -60,15 +60,15 @@ export default function VolumeScatter({ data, avgSentiment }: Props) {
                         dataKey="total_flights"
                         type="number"
                         name="Total Flights"
-                        tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
-                        axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
+                        tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
+                        axisLine={{ stroke: "var(--chart-grid)" }}
                         tickLine={false}
                         tickFormatter={(v: number) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)}
                         label={{
                             value: "Annual Flight Volume",
                             position: "bottom",
                             offset: 4,
-                            fill: "rgba(255,255,255,0.35)",
+                            fill: "var(--chart-label)",
                             fontSize: 11,
                         }}
                     />
@@ -77,15 +77,15 @@ export default function VolumeScatter({ data, avgSentiment }: Props) {
                         type="number"
                         name="Sentiment"
                         domain={[3, 8]}
-                        tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 11 }}
-                        axisLine={{ stroke: "rgba(255,255,255,0.06)" }}
+                        tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
+                        axisLine={{ stroke: "var(--chart-grid)" }}
                         tickLine={false}
                         label={{
                             value: "Global Weighted Sentiment",
                             angle: -90,
                             position: "insideLeft",
                             offset: 4,
-                            fill: "rgba(255,255,255,0.35)",
+                            fill: "var(--chart-label)",
                             fontSize: 11,
                         }}
                     />
@@ -96,11 +96,11 @@ export default function VolumeScatter({ data, avgSentiment }: Props) {
                     />
                     <ReferenceLine
                         y={avgSentiment}
-                        stroke="rgba(94,106,210,0.4)"
+                        stroke="var(--accent-glow-strong)"
                         strokeDasharray="6 4"
                     />
                     <Tooltip content={<CustomTooltip />} cursor={false} />
-                    <Scatter data={data} strokeWidth={1} stroke="rgba(255,255,255,0.1)">
+                    <Scatter data={data} strokeWidth={1} stroke="var(--chart-cursor)">
                         {data.map((entry, i) => (
                             <Cell
                                 key={i}
