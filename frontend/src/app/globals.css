@@ -5,6 +5,8 @@
   --bg-surface: rgba(255, 255, 255, 0.04);
   --bg-surface-hover: rgba(255, 255, 255, 0.07);
   --bg-elevated: rgba(255, 255, 255, 0.08);
+  --bg-overlay: rgba(15, 15, 20, 0.85);
+  --bg-overlay-hover: rgba(30, 30, 40, 0.95);
   --accent: #5e6ad2;
   --accent-light: #7b85e0;
   --accent-glow: rgba(94, 106, 210, 0.25);
@@ -42,6 +44,8 @@
   --bg-surface: #ffffff;
   --bg-surface-hover: rgba(0, 0, 0, 0.03);
   --bg-elevated: #ffffff;
+  --bg-overlay: rgba(255, 255, 255, 0.9);
+  --bg-overlay-hover: rgba(255, 255, 255, 1);
   --accent: #5e6ad2;
   --accent-light: #5e6ad2;
   --accent-glow: rgba(94, 106, 210, 0.15);
@@ -570,7 +574,7 @@ body::after {
   height: 44px;
   align-items: center;
   justify-content: center;
-  background: rgba(15, 15, 20, 0.85);
+  background: var(--bg-overlay);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -581,7 +585,7 @@ body::after {
 }
 
 .mobile-hamburger:hover {
-  background: rgba(30, 30, 40, 0.95);
+  background: var(--bg-overlay-hover);
   border-color: var(--border-hover);
 }
 
@@ -686,7 +690,7 @@ body::after {
 }
 
 .map-container .leaflet-control-zoom a {
-  background: rgba(15, 15, 20, 0.9);
+  background: var(--bg-overlay);
   backdrop-filter: blur(12px);
   color: var(--text-primary);
   border: 1px solid var(--border);
@@ -697,7 +701,7 @@ body::after {
 }
 
 .map-container .leaflet-control-zoom a:hover {
-  background: rgba(30, 30, 40, 0.95);
+  background: var(--bg-overlay-hover);
 }
 
 .map-search {
@@ -712,7 +716,7 @@ body::after {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(15, 15, 20, 0.85);
+  background: var(--bg-overlay);
   backdrop-filter: blur(20px);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -760,7 +764,7 @@ body::after {
 
 .map-search__results {
   margin-top: 6px;
-  background: rgba(15, 15, 20, 0.92);
+  background: var(--bg-overlay);
   backdrop-filter: blur(20px);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
@@ -808,7 +812,7 @@ body::after {
   right: 0;
   width: 360px;
   height: 100%;
-  background: rgba(10, 10, 14, 0.92);
+  background: var(--bg-overlay);
   backdrop-filter: blur(24px);
   border-left: 1px solid var(--border);
   padding: 28px 24px;
@@ -985,7 +989,7 @@ body::after {
   position: absolute;
   bottom: 24px;
   left: 20px;
-  background: rgba(15, 15, 20, 0.85);
+  background: var(--bg-overlay);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);

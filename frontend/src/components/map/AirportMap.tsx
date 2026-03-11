@@ -7,6 +7,7 @@ import type { AirportWithCoords } from "@/lib/types";
 import AirportSearch from "./AirportSearch";
 import AirportDetailPanel from "./AirportDetailPanel";
 import "leaflet/dist/leaflet.css";
+import { useTheme } from "@/hooks/useTheme";
 
 interface Props {
     airports: AirportWithCoords[];
@@ -49,6 +50,7 @@ export default function AirportMap({ airports }: Props) {
     const [selected, setSelected] = useState<AirportWithCoords | null>(null);
     const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number; zoom: number } | null>(null);
     const flyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const theme = useTheme();
 
     const maxMentions = useMemo(
         () => Math.max(...airports.map((a) => a.total_mentions), 1),
@@ -77,7 +79,10 @@ export default function AirportMap({ airports }: Props) {
                 attributionControl={false}
             >
                 <ZoomControl position="bottomright" />
-                <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+                <TileLayer 
+                    key={theme} // Force re-render of TileLayer when theme changes
+                    url={`https://{s}.basemaps.cartocdn.com/${theme === "light" ? "light_all" : "dark_all"}/{z}/{x}/{y}{r}.png`} 
+                />
                 {flyTarget && (
                     <FlyTo lat={flyTarget.lat} lng={flyTarget.lng} zoom={flyTarget.zoom} />
                 )}
@@ -94,7 +99,7 @@ export default function AirportMap({ airports }: Props) {
                             pathOptions={{
                                 fillColor: sentimentColor(a.composite_score),
                                 fillOpacity: 0.75,
-                                color: "rgba(255,255,255,0.2)",
+                                color: "var(--chart-grid)",
                                 weight: 1,
                             }}
                             eventHandlers={{
