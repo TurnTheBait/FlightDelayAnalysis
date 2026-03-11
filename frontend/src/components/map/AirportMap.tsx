@@ -80,7 +80,7 @@ export default function AirportMap({ airports }: Props) {
             >
                 <ZoomControl position="bottomright" />
                 <TileLayer 
-                    key={theme} // Force re-render of TileLayer when theme changes
+                    key={theme}
                     url={`https://{s}.basemaps.cartocdn.com/${theme === "light" ? "light_all" : "dark_all"}/{z}/{x}/{y}{r}.png`} 
                 />
                 {flyTarget && (

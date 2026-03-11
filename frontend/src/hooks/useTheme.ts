@@ -6,11 +6,9 @@ export function useTheme() {
     const [theme, setTheme] = useState<"light" | "dark">("dark");
 
     useEffect(() => {
-        // Initial setup
         const isLight = document.documentElement.getAttribute("data-theme") === "light";
         setTheme(isLight ? "light" : "dark");
 
-        // Listen for future changes
         const observer = new MutationObserver((mutations) => {
             for (const mutation of mutations) {
                 if (mutation.type === "attributes" && mutation.attributeName === "data-theme") {

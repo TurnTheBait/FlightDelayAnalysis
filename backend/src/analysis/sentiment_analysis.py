@@ -40,7 +40,7 @@ def get_icao_to_iata_mapping(csv_path):
     mapping = dict(zip(df['icao_code'], df['iata_code']))
     return mapping
 
-def get_dynamic_strategic_hubs(flights_path, airports_path, top_n=30):
+def get_dynamic_strategic_hubs(flights_path, airports_path, top_n=35):
     print(f"Calculating Strategic Hubs dynamically from: {flights_path}")
     
     if not os.path.exists(flights_path):
