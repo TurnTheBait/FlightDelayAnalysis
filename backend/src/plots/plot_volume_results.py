@@ -9,6 +9,9 @@ import textwrap
 current_script_dir = os.path.dirname(os.path.abspath(__file__))
 src_dir = os.path.dirname(current_script_dir)
 backend_dir = os.path.dirname(src_dir)
+import sys
+sys.path.append(src_dir)
+import utils.plot_category_utils as pcu
 
 INPUT_FILE = os.path.join(backend_dir, 'results', 'tables', 'airport_volume_analysis_summary.csv')
 OUTPUT_DIR = os.path.join(backend_dir, 'results', 'figures', 'volume_analysis')
@@ -114,32 +117,26 @@ def main():
     
     df['rounded_score'] = df['composite_score'].round(1)
     
-    def create_label(codes):
-        code_list = list(codes)
-        if len(code_list) > 10:
-             text = ", ".join(code_list[:10]) + f", (+{len(code_list)-10})"
-        else:
-            text = ", ".join(code_list)
-        return textwrap.fill(text, width=40)
-
     aggregated_wa = df.groupby('rounded_score').agg({
-        'airport_code': create_label,
+        'airport_code': list,
         'composite_score': 'mean' 
     }).reset_index()
     
-    aggregated_wa = aggregated_wa.sort_values('rounded_score', ascending=False)
+    aggregated_wa = aggregated_wa.sort_values('rounded_score', ascending=False).reset_index(drop=True)
+    aggregated_wa['y_label'] = aggregated_wa.index.astype(str)
     
-    total_lines = aggregated_wa['airport_code'].apply(lambda x: x.count('\n') + 1).sum()
+    total_lines = aggregated_wa['airport_code'].apply(lambda x: len(x) // 10 + 1).sum()
     fig_height_agg = max(10, len(aggregated_wa) * 0.5 + total_lines * 0.25)
     
-    plt.figure(figsize=(16, fig_height_agg))
+    fig = plt.figure(figsize=(16, fig_height_agg))
     
     norm_score = mpl.colors.Normalize(vmin=0, vmax=10)
     cmap_score = mpl.cm.RdYlGn
     
-    colors_agg = [cmap_score(norm_score(v)) for v in aggregated_wa['rounded_score']]
+    color_dict = pcu.load_airport_colors(INPUT_FILE)
+    colors_agg = {row.y_label: cmap_score(norm_score(row.rounded_score)) for row in aggregated_wa.itertuples()}
     
-    ax_agg = sns.barplot(x='rounded_score', y='airport_code', hue='airport_code', data=aggregated_wa, palette=colors_agg, edgecolor='black', legend=False)
+    ax_agg = sns.barplot(x='rounded_score', y='y_label', hue='y_label', data=aggregated_wa, palette=colors_agg, edgecolor='black', legend=False)
     
     plt.title('Aggregated Composite Ranking (Sentiment + Volume)', fontsize=16, weight='bold')
     plt.xlabel('Composite Score (0-10)', fontsize=12)
@@ -149,6 +146,9 @@ def main():
     for i, row in enumerate(aggregated_wa.itertuples()):
         val = row.rounded_score
         ax_agg.text(row.rounded_score + 0.05, i, f"{val:.1f}", va='center', fontsize=10, weight='bold')
+
+    pcu.draw_colored_y_labels(fig, ax_agg, aggregated_wa['airport_code'], color_dict)
+    pcu.add_category_legend(ax_agg)
 
     plt.grid(True, axis='x', linestyle='--', alpha=0.3)
     plt.tight_layout()

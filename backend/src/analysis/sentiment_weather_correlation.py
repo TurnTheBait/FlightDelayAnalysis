@@ -192,7 +192,7 @@ def plot_results(df, df_lagged, output_dir):
 
     plt.figure(figsize=(10, 6))
     corr = df['global_sentiment'].corr(df['MinLateDeparted'])
-    sns.regplot(x='global_sentiment', y='MinLateDeparted', data=df, scatter_kws={'alpha':0.6, 'color': 'royalblue', 'edgecolor': 'w', 's': 60}, line_kws={'color':'red', 'label': f'Correlation: {corr:.2f}'})
+    sns.regplot(x='global_sentiment', y='MinLateDeparted', data=df, ci=None, scatter_kws={'alpha':0.6, 'color': 'royalblue', 'edgecolor': 'w', 's': 60}, line_kws={'color':'red', 'label': f'Correlation: {corr:.2f}'})
     plt.title(f'Delay Sentiment vs Average Departure Delay (r={corr:.2f})', fontsize=16, weight='bold')
     plt.xlabel('Delay Sentiment Score (1-10)', fontsize=12)
     plt.ylabel('Average Departure Delay (min)', fontsize=12)
@@ -204,7 +204,7 @@ def plot_results(df, df_lagged, output_dir):
     
     plt.figure(figsize=(10, 6))
     corr = df['global_sentiment'].corr(df['MinLateArrived'])
-    sns.regplot(x='global_sentiment', y='MinLateArrived', data=df, scatter_kws={'alpha':0.6, 'color': 'darkorange', 'edgecolor': 'w', 's': 60}, line_kws={'color':'red', 'label': f'Correlation: {corr:.2f}'})
+    sns.regplot(x='global_sentiment', y='MinLateArrived', data=df, ci=None, scatter_kws={'alpha':0.6, 'color': 'darkorange', 'edgecolor': 'w', 's': 60}, line_kws={'color':'red', 'label': f'Correlation: {corr:.2f}'})
     plt.title(f'Delay Sentiment vs Average Arrival Delay (r={corr:.2f})', fontsize=16, weight='bold')
     plt.xlabel('Delay Sentiment Score (1-10)', fontsize=12)
     plt.ylabel('Average Arrival Delay (min)', fontsize=12)
@@ -216,7 +216,7 @@ def plot_results(df, df_lagged, output_dir):
     
     plt.figure(figsize=(10, 6))
     corr = df['global_sentiment'].corr(df['Dep_prcp'])
-    sns.regplot(x='global_sentiment', y='Dep_prcp', data=df, scatter_kws={'alpha':0.6, 'color': 'teal', 'edgecolor': 'w', 's': 60}, line_kws={'color':'red', 'label': f'Correlation: {corr:.2f}'})
+    sns.regplot(x='global_sentiment', y='Dep_prcp', data=df, ci=None, scatter_kws={'alpha':0.6, 'color': 'teal', 'edgecolor': 'w', 's': 60}, line_kws={'color':'red', 'label': f'Correlation: {corr:.2f}'})
     plt.title(f'Delay Sentiment vs Average Precipitation (r={corr:.2f})', fontsize=16, weight='bold')
     plt.xlabel('Delay Sentiment Score (1-10)', fontsize=12)
     plt.ylabel('Average Precipitation (mm)', fontsize=12)
@@ -228,7 +228,7 @@ def plot_results(df, df_lagged, output_dir):
 
     plt.figure(figsize=(10, 6))
     corr = df['global_sentiment'].corr(df['Dep_wspd'])
-    sns.regplot(x='global_sentiment', y='Dep_wspd', data=df, scatter_kws={'alpha':0.6, 'color': 'mediumseagreen', 'edgecolor': 'w', 's': 60}, line_kws={'color':'red', 'label': f'Correlation: {corr:.2f}'})
+    sns.regplot(x='global_sentiment', y='Dep_wspd', data=df, ci=None, scatter_kws={'alpha':0.6, 'color': 'mediumseagreen', 'edgecolor': 'w', 's': 60}, line_kws={'color':'red', 'label': f'Correlation: {corr:.2f}'})
     plt.title(f'Delay Sentiment vs Average Wind Speed (r={corr:.2f})', fontsize=16, weight='bold')
     plt.xlabel('Delay Sentiment Score (1-10)', fontsize=12)
     plt.ylabel('Average Wind Speed (km/h)', fontsize=12)
