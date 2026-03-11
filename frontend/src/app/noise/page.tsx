@@ -5,7 +5,7 @@ import NoiseRankingChart from "@/components/charts/NoiseRankingChart";
 export default function NoisePage() {
     const allAirports = loadAirportSummary();
     const airports = allAirports.filter(
-        (a) => a.noise_weighted_sentiment != null && a.noise_reviews_count != null
+        (a) => a.noise_weighted_sentiment != null && a.noise_reviews_count != null && a.noise_reviews_count >= 10
     );
     const population = loadNoisePopulationData();
 
