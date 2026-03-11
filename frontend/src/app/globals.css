@@ -31,7 +31,6 @@
   --transition-slow: 300ms ease-out;
   --sidebar-width: 240px;
 
-  /* Chart Default (Dark) Colors */
   --chart-tick: rgba(255, 255, 255, 0.4);
   --chart-grid: rgba(255, 255, 255, 0.06);
   --chart-cursor: rgba(255, 255, 255, 0.03);
@@ -59,7 +58,6 @@
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 
-  /* Chart Light Colors */
   --chart-tick: rgba(0, 0, 0, 0.4);
   --chart-grid: rgba(0, 0, 0, 0.06);
   --chart-cursor: rgba(0, 0, 0, 0.03);
