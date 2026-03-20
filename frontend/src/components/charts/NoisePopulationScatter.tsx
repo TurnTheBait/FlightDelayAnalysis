@@ -1,8 +1,9 @@
 "use client";
 
 import {
-    ScatterChart,
+    ComposedChart,
     Scatter,
+    Line,
     XAxis,
     YAxis,
     Tooltip,
@@ -10,6 +11,7 @@ import {
     Cell,
     ZAxis,
 } from "recharts";
+import { useMemo } from "react";
 
 interface DataPoint {
     airport_code: string;
@@ -24,9 +26,10 @@ interface Props {
     data: DataPoint[];
 }
 
-function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: DataPoint }> }) {
+function CustomTooltip({ active, payload }: { active?: boolean; payload?: any[] }) {
     if (!active || !payload?.length) return null;
-    const d = payload[0].payload;
+    const d = payload[0].payload as DataPoint;
+    if (!d.airport_code) return null;
     return (
         <div className="custom-tooltip">
             <div className="custom-tooltip__label">
@@ -41,7 +44,7 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
             <div className="custom-tooltip__value">
                 Total Flights: {d.total_flights.toLocaleString()}
             </div>
-            <div className="custom-tooltip__value" style={{ marginTop: '4px', color: sentimentColor(d.avg_sentiment) }}>
+            <div className="custom-tooltip__value" style={{ marginTop: "4px", color: sentimentColor(d.avg_sentiment) }}>
                 Avg Sentiment: {d.avg_sentiment.toFixed(2)}
             </div>
         </div>
@@ -55,11 +58,46 @@ function sentimentColor(val: number): string {
     return "#f85149";
 }
 
+// Log-log linear regression → power-law trend line
+function computeTrendLine(data: DataPoint[], numPoints = 40) {
+    const valid = data.filter(d => d.population_20km > 0 && d.noise_review_count > 0);
+    if (valid.length < 3) return [];
+
+    const logX = valid.map(d => Math.log(d.population_20km));
+    const logY = valid.map(d => Math.log(d.noise_review_count));
+    const n = logX.length;
+
+    const sumX = logX.reduce((a, b) => a + b, 0);
+    const sumY = logY.reduce((a, b) => a + b, 0);
+    const sumXY = logX.reduce((a, x, i) => a + x * logY[i], 0);
+    const sumX2 = logX.reduce((a, x) => a + x * x, 0);
+
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
+
+    const minX = Math.min(...valid.map(d => d.population_20km));
+    const maxX = Math.max(...valid.map(d => d.population_20km));
+    const logMin = Math.log(minX);
+    const logMax = Math.log(maxX);
+    const step = (logMax - logMin) / (numPoints - 1);
+
+    return Array.from({ length: numPoints }, (_, i) => {
+        const lx = logMin + i * step;
+        const ly = intercept + slope * lx;
+        return {
+            population_20km: Math.exp(lx),
+            noise_review_count: Math.exp(ly),
+        };
+    });
+}
+
 export default function NoisePopulationScatter({ data }: Props) {
+    const trendData = useMemo(() => computeTrendLine(data), [data]);
+
     return (
         <div className="chart-container">
             <ResponsiveContainer width="100%" height={380}>
-                <ScatterChart margin={{ top: 10, right: 20, bottom: 20, left: 10 }}>
+                <ComposedChart margin={{ top: 10, right: 20, bottom: 20, left: 10 }}>
                     <XAxis
                         dataKey="population_20km"
                         type="number"
@@ -69,6 +107,7 @@ export default function NoisePopulationScatter({ data }: Props) {
                         tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
                         axisLine={{ stroke: "var(--chart-grid)" }}
                         tickLine={false}
+                        allowDuplicatedCategory={false}
                         tickFormatter={(v: number) =>
                             v >= 1000000
                                 ? `${(v / 1000000).toFixed(1)}M`
@@ -102,6 +141,18 @@ export default function NoisePopulationScatter({ data }: Props) {
                     />
                     <ZAxis dataKey="total_flights" range={[40, 600]} name="Flights" />
                     <Tooltip content={<CustomTooltip />} cursor={false} />
+                    <Line
+                        data={trendData}
+                        dataKey="noise_review_count"
+                        stroke="var(--accent)"
+                        strokeWidth={2}
+                        strokeDasharray="8 4"
+                        dot={false}
+                        activeDot={false}
+                        opacity={0.6}
+                        name="Trend"
+                        legendType="none"
+                    />
                     <Scatter data={data} strokeWidth={1} stroke="var(--chart-cursor)">
                         {data.map((entry, i) => (
                             <Cell
@@ -111,7 +162,7 @@ export default function NoisePopulationScatter({ data }: Props) {
                             />
                         ))}
                     </Scatter>
-                </ScatterChart>
+                </ComposedChart>
             </ResponsiveContainer>
         </div>
     );

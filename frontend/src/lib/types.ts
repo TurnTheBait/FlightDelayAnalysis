@@ -85,3 +85,13 @@ export interface AirportVolumeAnalysis {
     volume_norm: number;
     composite_score: number;
 }
+
+export interface BenchmarkAirport {
+    airport_code: string;
+    name: string;
+    total_flights: number;
+    sentiment_score: number;
+    category_mean: number;
+    z_score: number;
+    rank: number;
+}

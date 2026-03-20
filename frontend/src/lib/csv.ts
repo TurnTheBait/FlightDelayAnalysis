@@ -8,6 +8,7 @@ import type {
     WeatherLaggedEvent,
     NoiseSentimentPopulation,
     CorrelationMatrix,
+    BenchmarkAirport,
 } from "./types";
 
 const TABLES_DIR = path.resolve(
@@ -96,5 +97,39 @@ export function loadVolumeAnalysis(): AirportVolumeAnalysis[] {
 
 export function loadCategoryBenchmarkSummary(): import("./types").CategoryBenchmarkSummary[] {
     return loadCSV<import("./types").CategoryBenchmarkSummary>("category_benchmarking/summary_general.csv");
+}
+
+type BenchmarkMode = "general" | "delay" | "noise";
+type CategoryName = "hub" | "large" | "medium" | "small";
+
+const CATEGORIES: CategoryName[] = ["hub", "large", "medium", "small"];
+const MODES: BenchmarkMode[] = ["general", "delay", "noise"];
+
+export function loadBenchmarkDetail(mode: BenchmarkMode, category: CategoryName): BenchmarkAirport[] {
+    return loadCSV<BenchmarkAirport>(`category_benchmarking/benchmarking_${mode}_${category}.csv`);
+}
+
+export interface AllBenchmarkData {
+    summaries: Record<BenchmarkMode, import("./types").CategoryBenchmarkSummary[]>;
+    details: Record<BenchmarkMode, Record<CategoryName, BenchmarkAirport[]>>;
+}
+
+export function loadAllBenchmarkData(): AllBenchmarkData {
+    const summaries = {} as Record<BenchmarkMode, import("./types").CategoryBenchmarkSummary[]>;
+    const details = {} as Record<BenchmarkMode, Record<CategoryName, BenchmarkAirport[]>>;
+
+    for (const mode of MODES) {
+        summaries[mode] = loadCSV<import("./types").CategoryBenchmarkSummary>(`category_benchmarking/summary_${mode}.csv`);
+        details[mode] = {} as Record<CategoryName, BenchmarkAirport[]>;
+        for (const cat of CATEGORIES) {
+            try {
+                details[mode][cat] = loadBenchmarkDetail(mode, cat);
+            } catch {
+                details[mode][cat] = [];
+            }
+        }
+    }
+
+    return { summaries, details };
 }
 

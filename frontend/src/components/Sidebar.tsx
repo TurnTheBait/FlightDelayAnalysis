@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Globe, MapPin, BarChart3, Clock, Cloud, Volume2, Plane, Menu, X } from "lucide-react";
+import { Globe, MapPin, BarChart3, Clock, Cloud, Volume2, Plane, Menu, X, Award } from "lucide-react";
 
 const NAV_ITEMS = [
     { href: "/", label: "Global Summary", icon: Globe },
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
     { href: "/delays", label: "Operational Delays", icon: Clock },
     { href: "/weather", label: "Weather Impact", icon: Cloud },
     { href: "/noise", label: "Noise & Population", icon: Volume2 },
+    { href: "/benchmarking", label: "Benchmarking", icon: Award },
 ];
 
 export default function Sidebar() {

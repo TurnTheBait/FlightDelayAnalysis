@@ -1,12 +1,10 @@
-import { loadVolumeAnalysis, loadCategoryBenchmarkSummary } from "@/lib/csv";
+import { loadVolumeAnalysis } from "@/lib/csv";
 import VolumeScatter from "@/components/charts/VolumeScatter";
 import VolumeRankingChart from "@/components/charts/VolumeRankingChart";
-import CategoryBenchmarkChart from "@/components/charts/CategoryBenchmarkChart";
 import FadeIn from "@/components/FadeIn";
 
 export default function VolumePage() {
     const airports = loadVolumeAnalysis();
-    const benchmarkSummary = loadCategoryBenchmarkSummary();
 
     const avgSentiment =
         airports.reduce((sum, a) => sum + a.global_weighted_sentiment, 0) /
@@ -101,16 +99,6 @@ export default function VolumePage() {
                         </span>
                     </div>
                     <VolumeRankingChart data={top15} />
-                </FadeIn>
-
-                <FadeIn delay={0.35} className="bento-grid__item col-span-6">
-                    <div className="card-title">
-                        Performance Benchmark{" "}
-                        <span className="card-title__accent">
-                            by Airport Size
-                        </span>
-                    </div>
-                    <CategoryBenchmarkChart data={benchmarkSummary} />
                 </FadeIn>
             </div>
         </>
