@@ -26,3 +26,9 @@ geopy
 geopandas
 rasterio
 shapely
+pillow
+scikit-learn
+pyproj
+pydantic
+fastapi
+uvicorn
