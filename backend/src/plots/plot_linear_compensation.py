@@ -38,14 +38,14 @@ def plot_linear_compensation():
     
     sns.histplot(raw_scores, bins=bins, kde=True, color="#e74c3c", 
                  ax=axes[0], stat='density', alpha=0.4, linewidth=0)
-    axes[0].set_title("Prima: Punteggi Grezzi (Bias Negativo)", fontsize=14, pad=15, fontweight='bold')
+    axes[0].set_title("Prima: Punteggi Grezzi", fontsize=14, pad=15, fontweight='bold')
     axes[0].set_xlabel("Punteggio [1.0 - 10.0]", fontsize=12)
     axes[0].set_ylabel("Densità", fontsize=12)
     axes[0].set_xlim(0.5, 10.5)
     axes[0].set_xticks(range(1, 11))
     
     median_raw = np.median(raw_scores)
-    axes[0].axvline(median_raw, color='darkred', linestyle='--', alpha=0.7, label=f'Mediana: {median_raw:.1f}')
+    axes[0].axvline(median_raw, color='darkred', linestyle='--', alpha=0.7, label=f'Media: {median_raw:.1f}')
     axes[0].legend()
     
     sns.histplot(transformed_scores, bins=bins, kde=True, color="#2ecc71", 
@@ -57,7 +57,7 @@ def plot_linear_compensation():
     axes[1].set_xticks(range(1, 11))
     
     median_transformed = np.median(transformed_scores)
-    axes[1].axvline(median_transformed, color='darkgreen', linestyle='--', alpha=0.7, label=f'Mediana: {median_transformed:.1f}')
+    axes[1].axvline(median_transformed, color='darkgreen', linestyle='--', alpha=0.7, label=f'Media: {median_transformed:.1f}')
     axes[1].legend()
     
     plt.tight_layout()

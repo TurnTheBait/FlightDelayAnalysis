@@ -62,7 +62,8 @@ export function loadNoisePopulationData(): NoiseSentimentPopulation[] {
 }
 
 export function loadAirportsWithCoords(): AirportWithCoords[] {
-    const airports = loadVolumeAnalysis();
+    const summaries = loadAirportSummary();
+    const volumeData = loadVolumeAnalysis();
     const coordsPath = path.resolve(
         process.cwd(),
         "..",
@@ -83,11 +84,24 @@ export function loadAirportsWithCoords(): AirportWithCoords[] {
         coordsResult.data.map((c) => [c.iata_code, c])
     );
 
-    return airports
+    const volumeMap = new Map(
+        volumeData.map((v) => [v.airport_code, v])
+    );
+
+    return summaries
         .filter((a) => coordsMap.has(a.airport_code))
         .map((a) => {
             const c = coordsMap.get(a.airport_code)!;
-            return { ...a, latitude_deg: c.latitude_deg, longitude_deg: c.longitude_deg };
+            const v = volumeMap.get(a.airport_code);
+            return {
+                ...a,
+                latitude_deg: c.latitude_deg,
+                longitude_deg: c.longitude_deg,
+                total_flights: v?.total_flights ?? 0,
+                sentiment_norm: v?.sentiment_norm ?? 0,
+                volume_norm: v?.volume_norm ?? 0,
+                composite_score: v?.composite_score ?? a.global_weighted_sentiment,
+            };
         });
 }
 

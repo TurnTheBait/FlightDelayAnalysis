@@ -813,9 +813,9 @@ body::after {
   background: var(--bg-overlay);
   backdrop-filter: blur(24px);
   border-left: 1px solid var(--border);
-  padding: 28px 24px;
+  padding: 80px 24px 28px;
   overflow-y: auto;
-  z-index: 1000;
+  z-index: 1001;
   animation: slideIn 0.3s ease-out;
 }
 
