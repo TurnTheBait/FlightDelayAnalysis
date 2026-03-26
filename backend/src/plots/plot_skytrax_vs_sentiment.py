@@ -103,8 +103,8 @@ def plot_calibration():
     plt.close()
 
     plt.figure(figsize=(12, 6))
-    sns.kdeplot(df_merged['user_rating'], fill=True, label='Voti Utente', color='#2ecc71', alpha=0.4)
-    sns.kdeplot(df_merged['combined_score'], fill=True, label='Sentiment Score', color='#3498db', alpha=0.4)
+    sns.kdeplot(df_merged['user_rating'], fill=True, label='Voti Utente', color='#2ecc71', alpha=0.4, clip=(0, 10))
+    sns.kdeplot(df_merged['combined_score'], fill=True, label='Sentiment Score', color='#3498db', alpha=0.4, clip=(0, 10))
     plt.title('Distribuzione Voti Skytrax Utente vs. Sentiment', fontsize=16)
     plt.xlabel('Score [1.0 - 10.0]', fontsize=14)
     plt.ylabel('Densità', fontsize=14)
