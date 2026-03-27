@@ -6,8 +6,8 @@ from scipy.stats import pearsonr, spearmanr
 
 BASE_DIR = '/Users/davidegirolamo/Programming/FlightDelayAnalysis/FlightDelayAnalysis/backend'
 delays_file = os.path.join(BASE_DIR, 'data', 'processed', 'delays', 'delays_consolidated_filtered.csv')
-sentiment_file = os.path.join(BASE_DIR, 'data', 'sentiment', 'sentiment_results_noise.csv')
-output_plot = os.path.join(BASE_DIR, 'results', 'figures', 'delay', 'sentiment_noise_vs_delay.png')
+sentiment_file = os.path.join(BASE_DIR, 'data', 'sentiment', 'sentiment_results_delay.csv')
+output_plot = os.path.join(BASE_DIR, 'results', 'figures', 'delay', 'sentiment_delay_vs_delay.png')
 
 print("Loading Delays...")
 df_delays = pd.read_csv(delays_file, usecols=['OrigDate', 'MinLateDeparted', 'Cancelled'])
@@ -62,13 +62,13 @@ ax1.grid(True, alpha=0.3)
 
 ax2 = ax1.twinx()  
 color2 = '#1D3557' 
-ax2.set_ylabel('Sentiment Noise (Scala 1-10, Val. Bassi = Negativo)', color=color2, fontsize=12)  
+ax2.set_ylabel('Sentiment Delay (Scala 1-10, Val. Bassi = Negativo)', color=color2, fontsize=12)  
 sent_smooth = df_merged['sentiment_T_to_T3'].rolling(14, min_periods=1).mean()
 ax2.plot(df_merged['date'], sent_smooth, color=color2, label='Sentiment Forward 0-3g', linewidth=2)
 ax2.tick_params(axis='y', labelcolor=color2)
 
 fig.autofmt_xdate()
-plt.title('Ritardo dei Voli vs Sentiment Noise\n(Considerando le recensioni da 0 a 3 giorni successivi al volo)', fontsize=14, pad=15)
+plt.title('Ritardo dei Voli vs Sentiment Delay\n(Considerando le recensioni da 0 a 3 giorni successivi al volo)', fontsize=14, pad=15)
 
 lines1, labels1 = ax1.get_legend_handles_labels()
 lines2, labels2 = ax2.get_legend_handles_labels()
